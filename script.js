@@ -57,10 +57,10 @@ class CheckoutManager {
     this.cart = cart;
     this.onSuccess = onSuccess;
     this.emailConfig = {
-      publicKey: "",
-      serviceId: "",
-      templateId: "",
-      recipient: "orders@example.com"
+      publicKey: "BRMPjEjPFGpnw7VJD",
+  serviceId: "service_dftcmfx", 
+  templateId: "template_gzg27fo",
+  recipient: "mogamarket20@gmail.com"
     };
     this.modal = document.querySelector("#checkout-modal");
     this.form = document.querySelector("#checkout-form");
