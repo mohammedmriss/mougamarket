@@ -14,18 +14,18 @@
 	<link rel="stylesheet" href="style.css">
 	<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
-<body class="bg-stone-50 text-stone-800">
-	<header class="site-header sticky top-0 z-30 border-b border-stone-200 bg-white/90">
+<body class="bg-slate-50 text-slate-800">
+	<header class="site-header sticky top-0 z-30 border-b border-slate-200 bg-white/90">
 		<div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-			<a href="index.html" class="text-xl font-extrabold tracking-tight text-emerald-800">موجا ماركت</a>
+			<a href="index.html" class="text-xl font-extrabold tracking-tight text-blue-900">موجا ماركت</a>
 			<nav aria-label="التنقل الرئيسي" class="hidden items-center gap-6 text-sm font-semibold md:flex">
-				<a href="#products" class="text-emerald-800">المنتجات</a>
-				<a href="#categories" class="transition hover:text-orange-600">التصنيفات</a>
-				<a href="#about" class="transition hover:text-orange-600">عن المتجر</a>
+				<a href="#products" class="text-blue-900">المنتجات</a>
+				<a href="#categories" class="transition hover:text-sky-600">التصنيفات</a>
+				<a href="#about" class="transition hover:text-sky-600">عن المتجر</a>
 			</nav>
-			<button type="button" aria-label="فتح السلة" data-cart-open class="relative rounded-full p-2 text-emerald-800 transition hover:bg-emerald-50">
+			<button type="button" aria-label="فتح السلة" data-cart-open class="relative rounded-full p-2 text-blue-900 transition hover:bg-sky-50">
 				<i class="fa-solid fa-bag-shopping text-lg" aria-hidden="true"></i>
-				<span data-cart-count class="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-xs font-bold text-white">0</span>
+				<span data-cart-count class="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-sky-600 text-xs font-bold text-white">0</span>
 			</button>
 		</div>
 	</header>
@@ -34,18 +34,18 @@
 		<section class="hero-panel text-white">
 			<div class="mx-auto grid max-w-7xl items-center gap-8 px-4 py-16 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8 lg:py-24">
 				<div>
-					<p class="mb-4 font-semibold text-orange-300">لمسات صغيرة، فرق كبير</p>
+					<p class="mb-4 font-semibold text-sky-300">لمسات صغيرة، فرق كبير</p>
 					<h1 class="max-w-2xl text-4xl font-extrabold leading-tight sm:text-5xl">اجعل منزلك يشبهك أكثر</h1>
-					<p class="mt-5 max-w-xl text-base leading-8 text-emerald-100 sm:text-lg">منتجات منزلية مختارة بعناية تجمع بين العملية والجمال لتصنع مساحة أكثر راحة.</p>
-					<a href="#products" class="mt-8 inline-flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-3 font-bold text-white transition hover:bg-orange-600">
+					<p class="mt-5 max-w-xl text-base leading-8 text-sky-100 sm:text-lg">منتجات منزلية مختارة بعناية تجمع بين العملية والجمال لتصنع مساحة أكثر راحة.</p>
+					<a href="#products" class="mt-8 inline-flex items-center gap-2 rounded-lg bg-sky-600 px-6 py-3 font-bold text-white transition hover:bg-blue-900">
 						اكتشف المنتجات
 						<i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
 					</a>
 				</div>
-				<div class="hero-art flex min-h-64 items-center justify-center rounded-2xl border border-emerald-700 bg-emerald-800 p-8 text-center">
+				<div class="hero-art flex min-h-64 items-center justify-center rounded-2xl border border-blue-800 bg-blue-900 p-8 text-center">
 					<div>
-						<i class="fa-solid fa-house-chimney text-6xl text-orange-300" aria-hidden="true"></i>
-						<p class="mt-5 text-sm text-emerald-100">مجموعة مختارة لبيت أكثر دفئاً</p>
+						<i class="fa-solid fa-house-chimney text-6xl text-sky-300" aria-hidden="true"></i>
+						<p class="mt-5 text-sm text-sky-100">مجموعة مختارة لبيت أكثر دفئاً</p>
 					</div>
 				</div>
 			</div>
@@ -54,8 +54,8 @@
 		<section id="categories" class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
 			<div class="flex flex-wrap items-center justify-between gap-4">
 				<div>
-					<p class="text-sm font-bold text-orange-600">تسوق حسب احتياجك</p>
-					<h2 class="mt-1 text-2xl font-extrabold text-stone-900">التصنيفات</h2>
+					<p class="text-sm font-bold text-sky-600">تسوق حسب احتياجك</p>
+					<h2 class="mt-1 text-2xl font-extrabold text-slate-900">التصنيفات</h2>
 				</div>
 				<div id="category-list" class="flex flex-wrap gap-2" aria-label="تصنيفات المنتجات"></div>
 			</div>
@@ -64,49 +64,49 @@
 		<section id="products" class="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
 			<div class="mb-6 flex items-end justify-between gap-4">
 				<div>
-					<p class="text-sm font-bold text-orange-600">مختارات موجا</p>
-					<h2 class="mt-1 text-2xl font-extrabold text-stone-900">منتجاتنا المميزة</h2>
+					<p class="text-sm font-bold text-sky-600">مختارات موجا</p>
+					<h2 class="mt-1 text-2xl font-extrabold text-slate-900">منتجاتنا المميزة</h2>
 				</div>
-				<span id="product-count" class="text-sm text-stone-500">جار التحميل...</span>
+				<span id="product-count" class="text-sm text-slate-500">جار التحميل...</span>
 			</div>
 			<div id="product-grid" class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4"></div>
 		</section>
 	</main>
 
 	<div id="cart-drawer" class="cart-drawer fixed inset-0 z-50" aria-hidden="true">
-		<div class="cart-backdrop absolute inset-0 bg-stone-900/50" data-cart-close></div>
+		<div class="cart-backdrop absolute inset-0 bg-slate-900/50" data-cart-close></div>
 		<aside class="cart-panel absolute bottom-0 left-0 top-0 flex w-full max-w-md flex-col bg-white shadow-2xl" aria-label="سلة التسوق">
-			<div class="flex items-center justify-between border-b border-stone-200 p-5">
-				<div><h2 class="text-xl font-extrabold">سلة التسوق</h2><p class="mt-1 text-sm text-stone-500">راجع اختياراتك قبل المتابعة</p></div>
-				<button type="button" class="rounded-full p-2 text-stone-500 hover:bg-stone-100" data-cart-close aria-label="إغلاق السلة"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+			<div class="flex items-center justify-between border-b border-slate-200 p-5">
+				<div><h2 class="text-xl font-extrabold">سلة التسوق</h2><p class="mt-1 text-sm text-slate-500">راجع اختياراتك قبل المتابعة</p></div>
+				<button type="button" class="rounded-full p-2 text-slate-500 hover:bg-slate-100" data-cart-close aria-label="إغلاق السلة"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
 			</div>
 			<div id="cart-items" class="flex-1 overflow-y-auto px-5"></div>
-			<p id="empty-cart" class="px-5 py-10 text-center text-sm text-stone-500">السلة فارغة حالياً.</p>
-			<div class="border-t border-stone-200 p-5"><div class="mb-4 flex items-center justify-between font-bold"><span>الإجمالي</span><span id="cart-total" class="text-emerald-800">0.00 $</span></div><button type="button" data-checkout-open class="w-full rounded-lg bg-orange-500 px-5 py-3 font-bold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50" disabled>إتمام الطلب</button></div>
+			<p id="empty-cart" class="px-5 py-10 text-center text-sm text-slate-500">السلة فارغة حالياً.</p>
+			<div class="border-t border-slate-200 p-5"><div class="mb-4 flex items-center justify-between font-bold"><span>الإجمالي</span><span id="cart-total" class="text-blue-900">0.00 $</span></div><button type="button" data-checkout-open class="w-full rounded-lg bg-blue-900 px-5 py-3 font-bold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-50" disabled>إتمام الطلب</button></div>
 		</aside>
 	</div>
 
 	<div id="checkout-modal" class="checkout-modal fixed inset-0 z-[60] flex items-center justify-center p-4" aria-hidden="true">
-		<div class="checkout-backdrop absolute inset-0 bg-stone-900/50" data-checkout-close></div>
+		<div class="checkout-backdrop absolute inset-0 bg-slate-900/50" data-checkout-close></div>
 		<section class="checkout-panel relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
 			<div class="flex items-start justify-between gap-4">
-				<div><p class="text-sm font-bold text-orange-600">خطوة أخيرة</p><h2 id="checkout-title" class="mt-1 text-2xl font-extrabold">إتمام الطلب</h2><p class="mt-2 text-sm text-stone-500">أدخل بيانات التوصيل وسنتواصل معك لتأكيد الطلب.</p></div>
-				<button type="button" class="rounded-full p-2 text-stone-500 hover:bg-stone-100" data-checkout-close aria-label="إغلاق نموذج الطلب"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+				<div><p class="text-sm font-bold text-sky-600">خطوة أخيرة</p><h2 id="checkout-title" class="mt-1 text-2xl font-extrabold">إتمام الطلب</h2><p class="mt-2 text-sm text-slate-500">أدخل بيانات التوصيل وسنتواصل معك لتأكيد الطلب.</p></div>
+				<button type="button" class="rounded-full p-2 text-slate-500 hover:bg-slate-100" data-checkout-close aria-label="إغلاق نموذج الطلب"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
 			</div>
 			<form id="checkout-form" class="mt-6 space-y-4">
 				<label class="block text-sm font-semibold" for="customer-name">الاسم الكامل<input id="customer-name" name="customer_name" type="text" required autocomplete="name" class="checkout-input mt-2" placeholder="مثال: أحمد محمد"></label>
 				<label class="block text-sm font-semibold" for="customer-email">البريد الإلكتروني<input id="customer-email" name="customer_email" type="email" required autocomplete="email" class="checkout-input mt-2" placeholder="name@example.com"></label>
 				<label class="block text-sm font-semibold" for="customer-phone">رقم الهاتف<input id="customer-phone" name="customer_phone" type="tel" required autocomplete="tel" class="checkout-input mt-2" placeholder="05xxxxxxxx"></label>
 				<label class="block text-sm font-semibold" for="customer-address">عنوان التوصيل<textarea id="customer-address" name="customer_address" required rows="3" class="checkout-input mt-2" placeholder="المدينة، الحي، الشارع"></textarea></label>
-				<label class="block text-sm font-semibold" for="customer-note">ملاحظات إضافية <span class="font-normal text-stone-400">(اختياري)</span><textarea id="customer-note" name="customer_note" rows="2" class="checkout-input mt-2" placeholder="وقت مناسب للتوصيل..."></textarea></label>
+				<label class="block text-sm font-semibold" for="customer-note">ملاحظات إضافية <span class="font-normal text-slate-400">(اختياري)</span><textarea id="customer-note" name="customer_note" rows="2" class="checkout-input mt-2" placeholder="وقت مناسب للتوصيل..."></textarea></label>
 				<div id="checkout-status" class="hidden rounded-lg p-3 text-sm" role="status" aria-live="polite"></div>
-				<button type="submit" class="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-800 px-5 py-3 font-bold text-white transition hover:bg-emerald-900 disabled:cursor-wait disabled:opacity-60"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>إرسال الطلب</span></button>
+				<button type="submit" class="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-900 px-5 py-3 font-bold text-white transition hover:bg-black disabled:cursor-wait disabled:opacity-60"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>إرسال الطلب</span></button>
 			</form>
 		</section>
 	</div>
 
-	<footer id="about" class="border-t border-stone-200 bg-white">
-		<div class="mx-auto max-w-7xl px-4 py-8 text-center text-sm text-stone-500 sm:px-6 lg:px-8">موجا ماركت | منتجات تضيف معنى إلى منزلك</div>
+	<footer id="about" class="border-t border-slate-200 bg-white">
+		<div class="mx-auto max-w-7xl px-4 py-8 text-center text-sm text-slate-500 sm:px-6 lg:px-8">موجا ماركت | منتجات تضيف معنى إلى منزلك</div>
 	</footer>
 	<script src="script.js"></script>
 </body>

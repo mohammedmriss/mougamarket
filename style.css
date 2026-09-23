@@ -1,10 +1,9 @@
 :root {
-  --color-forest: #155e4a;
-  --color-forest-dark: #0f4034;
-  --color-orange: #e87932;
-  --color-cream: #faf8f4;
-  --color-ink: #292524;
-  --shadow-soft: 0 14px 40px rgba(30, 41, 35, 0.1);
+  --color-marine: #0077b6;
+  --color-marine-dark: #0d253f;
+  --color-surface: #f0f4f8;
+  --color-ink: #0f172a;
+  --shadow-soft: 0 14px 40px rgba(13, 37, 63, 0.14);
 }
 
 html {
@@ -12,7 +11,7 @@ html {
 }
 
 body {
-  background: var(--color-cream);
+  background: var(--color-surface);
   color: var(--color-ink);
   font-family: "Cairo", sans-serif;
 }
@@ -24,7 +23,7 @@ a {
 
 button:focus-visible,
 a:focus-visible {
-  outline: 3px solid rgba(232, 121, 50, 0.55);
+  outline: 3px solid rgba(0, 119, 182, 0.55);
   outline-offset: 3px;
 }
 
@@ -34,8 +33,8 @@ a:focus-visible {
 
 .hero-panel {
   background:
-    radial-gradient(circle at 82% 20%, rgba(232, 121, 50, 0.24), transparent 28%),
-    linear-gradient(135deg, var(--color-forest-dark), var(--color-forest));
+    radial-gradient(circle at 82% 20%, rgba(0, 119, 182, 0.3), transparent 28%),
+    linear-gradient(135deg, var(--color-marine-dark), var(--color-marine));
 }
 
 .hero-art {
@@ -54,7 +53,7 @@ a:focus-visible {
 }
 
 .product-image {
-  background: linear-gradient(145deg, #f3f0e9, #e5eee8);
+  background: linear-gradient(145deg, #ffffff, #e0f2fe);
 }
 
 .category-button {
@@ -66,8 +65,8 @@ a:focus-visible {
 }
 
 .category-button.is-active {
-  background: var(--color-forest);
-  border-color: var(--color-forest);
+  background: var(--color-marine-dark);
+  border-color: var(--color-marine-dark);
   color: white;
 }
 
@@ -100,7 +99,7 @@ a:focus-visible {
 }
 
 .cart-item + .cart-item {
-  border-top: 1px solid #e7e5e4;
+  border-top: 1px solid #dbeafe;
 }
 
 .checkout-modal {
@@ -128,7 +127,7 @@ a:focus-visible {
 .checkout-input {
   display: block;
   width: 100%;
-  border: 1px solid #d6d3d1;
+  border: 1px solid #cbd5e1;
   border-radius: 0.5rem;
   background: #fff;
   padding: 0.7rem 0.8rem;
@@ -140,8 +139,8 @@ a:focus-visible {
 }
 
 .checkout-input:focus {
-  border-color: var(--color-forest);
-  box-shadow: 0 0 0 3px rgba(21, 94, 74, 0.12);
+  border-color: var(--color-marine);
+  box-shadow: 0 0 0 3px rgba(0, 119, 182, 0.14);
 }
 
 @keyframes float-art {

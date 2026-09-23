@@ -148,7 +148,7 @@ class CheckoutManager {
 
   setStatus(message, type = "") {
     this.status.textContent = message;
-    this.status.className = message ? `rounded-lg p-3 text-sm ${type === "success" ? "bg-emerald-50 text-emerald-800" : type === "error" ? "bg-orange-50 text-orange-800" : "bg-stone-100 text-stone-700"}` : "hidden rounded-lg p-3 text-sm";
+    this.status.className = message ? `rounded-lg p-3 text-sm ${type === "success" ? "bg-sky-50 text-blue-900" : type === "error" ? "bg-slate-100 text-slate-900" : "bg-slate-100 text-slate-700"}` : "hidden rounded-lg p-3 text-sm";
   }
 }
 
@@ -182,7 +182,7 @@ class UIManager {
       this.renderCart();
       this.bindEvents();
     } catch (error) {
-      this.elements.productGrid.innerHTML = `<p class="col-span-full rounded-lg bg-red-50 p-5 text-center text-red-700">تعذر تحميل المنتجات. شغّل المشروع عبر خادم محلي ثم أعد المحاولة.</p>`;
+      this.elements.productGrid.innerHTML = `<p class="col-span-full rounded-lg bg-slate-100 p-5 text-center text-slate-900">تعذر تحميل المنتجات. شغّل المشروع عبر خادم محلي ثم أعد المحاولة.</p>`;
       console.error(error);
     }
   }
@@ -190,7 +190,7 @@ class UIManager {
   renderCategories() {
     const categories = ["الكل", ...new Set(this.products.map((product) => product.category))];
     this.elements.categoryList.innerHTML = categories.map((category) => `
-      <button type="button" class="category-button rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-semibold ${category === this.activeCategory ? "is-active" : ""}" data-category="${category}">
+      <button type="button" class="category-button rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold ${category === this.activeCategory ? "is-active" : ""}" data-category="${category}">
         ${category}
       </button>
     `).join("");
@@ -203,22 +203,22 @@ class UIManager {
 
     this.elements.productCount.textContent = `${visibleProducts.length} منتجات`;
     this.elements.productGrid.innerHTML = visibleProducts.map((product, index) => `
-      <article class="product-card overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm" style="animation-delay: ${index * 60}ms">
-        <div class="product-image relative flex aspect-square items-center justify-center text-emerald-800">
+      <article class="product-card overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm" style="animation-delay: ${index * 60}ms">
+        <div class="product-image relative flex aspect-square items-center justify-center text-blue-900">
           <img src="${product.image}" alt="${product.title}" class="absolute inset-0 h-full w-full object-cover" onerror="this.remove()">
           <i class="fa-solid fa-house-chimney text-5xl" aria-hidden="true"></i>
-          ${product.badge ? `<span class="absolute right-3 top-3 rounded-full bg-orange-500 px-3 py-1 text-xs font-bold text-white">${product.badge}</span>` : ""}
+          ${product.badge ? `<span class="absolute right-3 top-3 rounded-full bg-sky-600 px-3 py-1 text-xs font-bold text-white">${product.badge}</span>` : ""}
         </div>
         <div class="p-4">
-          <p class="text-xs font-bold text-stone-500">${product.category} · ${product.size}</p>
-          <h3 class="mt-2 font-bold text-stone-900">${product.title}</h3>
-          <p class="mt-2 min-h-12 text-sm leading-6 text-stone-500">${product.description}</p>
+          <p class="text-xs font-bold text-slate-500">${product.category} · ${product.size}</p>
+          <h3 class="mt-2 font-bold text-slate-900">${product.title}</h3>
+          <p class="mt-2 min-h-12 text-sm leading-6 text-slate-500">${product.description}</p>
           <div class="mt-4 flex items-center justify-between gap-3">
             <div>
-              <span class="font-extrabold text-emerald-800">${product.price.toFixed(2)} $</span>
-              ${product.oldPrice ? `<del class="mr-2 text-xs text-stone-400">${product.oldPrice.toFixed(2)} $</del>` : ""}
+              <span class="font-extrabold text-blue-900">${product.price.toFixed(2)} $</span>
+              ${product.oldPrice ? `<del class="mr-2 text-xs text-slate-400">${product.oldPrice.toFixed(2)} $</del>` : ""}
             </div>
-            <button type="button" class="rounded-lg bg-emerald-800 px-3 py-2 text-sm font-bold text-white transition hover:bg-orange-600" data-add-to-cart="${product.id}">
+            <button type="button" class="rounded-lg bg-blue-900 px-3 py-2 text-sm font-bold text-white transition hover:bg-black" data-add-to-cart="${product.id}">
               <i class="fa-solid fa-plus ml-1" aria-hidden="true"></i> أضف
             </button>
           </div>
@@ -235,11 +235,11 @@ class UIManager {
 
     this.elements.cartItems.innerHTML = this.cart.items.map((item) => `
       <div class="cart-item flex gap-3 py-4" data-cart-item="${item.id}">
-        <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-800"><i class="fa-solid fa-house" aria-hidden="true"></i></div>
+        <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-blue-900"><i class="fa-solid fa-house" aria-hidden="true"></i></div>
         <div class="min-w-0 flex-1">
-          <div class="flex items-start justify-between gap-2"><h3 class="truncate text-sm font-bold">${item.title}</h3><button type="button" class="text-stone-400 hover:text-red-600" data-remove-item="${item.id}" aria-label="حذف ${item.title}"><i class="fa-solid fa-trash" aria-hidden="true"></i></button></div>
-          <p class="mt-1 text-sm font-bold text-emerald-800">${(item.price * item.quantity).toFixed(2)} $</p>
-          <div class="mt-2 flex items-center gap-2"><button type="button" class="h-7 w-7 rounded border border-stone-300" data-quantity-change="-1" data-product-id="${item.id}">-</button><span class="min-w-5 text-center text-sm">${item.quantity}</span><button type="button" class="h-7 w-7 rounded border border-stone-300" data-quantity-change="1" data-product-id="${item.id}">+</button></div>
+          <div class="flex items-start justify-between gap-2"><h3 class="truncate text-sm font-bold">${item.title}</h3><button type="button" class="text-slate-400 hover:text-slate-900" data-remove-item="${item.id}" aria-label="حذف ${item.title}"><i class="fa-solid fa-trash" aria-hidden="true"></i></button></div>
+          <p class="mt-1 text-sm font-bold text-blue-900">${(item.price * item.quantity).toFixed(2)} $</p>
+          <div class="mt-2 flex items-center gap-2"><button type="button" class="h-7 w-7 rounded border border-slate-300" data-quantity-change="-1" data-product-id="${item.id}">-</button><span class="min-w-5 text-center text-sm">${item.quantity}</span><button type="button" class="h-7 w-7 rounded border border-slate-300" data-quantity-change="1" data-product-id="${item.id}">+</button></div>
         </div>
       </div>
     `).join("");
