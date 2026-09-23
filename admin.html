@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="لوحة تحكم موجا ماركت لإدارة المنتجات.">
+  <title>لوحة التحكم | موجا ماركت</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <main class="admin-shell">
+    <section id="login-view" class="login-view" aria-labelledby="login-title">
+      <div class="login-decoration" aria-hidden="true"><i class="fa-solid fa-house-chimney"></i></div>
+      <div class="login-card">
+        <a href="index.html" class="brand-mark">موجا ماركت</a>
+        <p class="eyebrow">مساحة الإدارة</p>
+        <h1 id="login-title">مرحباً بعودتك</h1>
+        <p class="muted-text">سجّل الدخول لإدارة منتجات متجرك.</p>
+        <form id="login-form" class="stack-form">
+          <label for="admin-password">كلمة المرور<input id="admin-password" name="admin-password" type="password" required autocomplete="current-password" class="admin-input" placeholder="أدخل كلمة المرور"></label>
+          <button type="submit" class="primary-button"><i class="fa-solid fa-lock-open" aria-hidden="true"></i> دخول إلى اللوحة</button>
+          <p id="login-status" class="form-status" role="alert" aria-live="polite"></p>
+        </form>
+        <p class="security-note"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> هذه حماية واجهة مؤقتة. سيتم تأمين GitHub API في المرحلة التالية.</p>
+      </div>
+    </section>
+
+    <section id="dashboard-view" class="dashboard-view is-hidden" aria-labelledby="dashboard-title">
+      <header class="dashboard-header">
+        <div class="brand-group"><a href="index.html" class="brand-mark">موجا ماركت</a><span class="admin-label">لوحة التحكم</span></div>
+        <div class="header-actions"><a href="index.html" class="text-button"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> عرض المتجر</a><button type="button" id="logout-button" class="icon-button" title="تسجيل الخروج" aria-label="تسجيل الخروج"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i></button></div>
+      </header>
+
+      <div class="dashboard-content">
+        <div class="page-heading"><div><p class="eyebrow">نظرة عامة</p><h1 id="dashboard-title">إدارة المنتجات</h1><p class="muted-text">أضف المنتجات وعدّل بياناتها من مكان واحد.</p></div><button type="button" id="new-product-button" class="primary-button"><i class="fa-solid fa-plus" aria-hidden="true"></i> منتج جديد</button></div>
+        <section class="github-section" aria-labelledby="github-heading">
+          <div class="section-heading"><div><h2 id="github-heading"><i class="fa-brands fa-github" aria-hidden="true"></i> اتصال GitHub</h2><p class="muted-text">احفظ المنتجات وارفع الصور مباشرة إلى مستودعك.</p></div><span id="github-connection-state" class="connection-state">غير متصل</span></div>
+          <form id="github-form" class="github-grid">
+            <label>مالك المستودع<input id="github-owner" type="text" required class="admin-input" placeholder="username"></label>
+            <label>اسم المستودع<input id="github-repo" type="text" required class="admin-input" placeholder="mougamarket"></label>
+            <label>الفرع<input id="github-branch" type="text" required class="admin-input" value="main"></label>
+            <label>GitHub Token<input id="github-token" type="password" required class="admin-input" autocomplete="off" placeholder="ghp_..."></label>
+            <div class="github-actions full-width"><button type="submit" class="secondary-button"><i class="fa-solid fa-plug" aria-hidden="true"></i> اختبار الاتصال</button><button type="button" id="github-load-button" class="secondary-button"><i class="fa-solid fa-cloud-arrow-down" aria-hidden="true"></i> تحميل من GitHub</button><button type="button" id="github-save-button" class="primary-button"><i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i> حفظ المنتجات</button></div>
+            <p id="github-status" class="form-status full-width" role="status" aria-live="polite"></p>
+          </form>
+          <p class="security-note"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> لا يتم حفظ Token إلا في جلسة المتصفح الحالية. استخدم Fine-grained Token بصلاحية Contents: Read and write للمستودع فقط.</p>
+        </section>
+        <div class="stats-grid"><div class="stat-card"><span class="stat-icon green"><i class="fa-solid fa-box-open" aria-hidden="true"></i></span><div><span class="stat-label">إجمالي المنتجات</span><strong id="total-products">0</strong></div></div><div class="stat-card"><span class="stat-icon orange"><i class="fa-solid fa-star" aria-hidden="true"></i></span><div><span class="stat-label">منتجات مميزة</span><strong id="featured-products">0</strong></div></div><div class="stat-card"><span class="stat-icon sand"><i class="fa-solid fa-layer-group" aria-hidden="true"></i></span><div><span class="stat-label">التصنيفات</span><strong id="category-total">0</strong></div></div></div>
+        <section class="products-section" aria-labelledby="products-heading">
+          <div class="section-heading"><div><h2 id="products-heading">قائمة المنتجات</h2><p class="muted-text">التغييرات الحالية تحفظ محلياً حتى ربط GitHub API.</p></div><label class="search-box"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input id="product-search" type="search" placeholder="ابحث عن منتج..." aria-label="البحث عن منتج"></label></div>
+          <div class="table-wrap"><table><thead><tr><th>المنتج</th><th>التصنيف</th><th>السعر</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="products-table-body"></tbody></table><div id="empty-products" class="empty-state is-hidden"><i class="fa-solid fa-box-open" aria-hidden="true"></i><p>لا توجد منتجات مطابقة.</p></div></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="product-dialog" class="product-dialog">
+    <form id="product-form" method="dialog" class="dialog-card">
+      <div class="dialog-heading"><div><p class="eyebrow">بيانات المنتج</p><h2 id="dialog-title">إضافة منتج</h2></div><button type="button" id="close-dialog" class="icon-button" aria-label="إغلاق"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
+      <input id="product-id" type="hidden">
+      <div class="form-grid">
+        <label>اسم المنتج<input id="product-title" type="text" required class="admin-input"></label>
+        <label>التصنيف<input id="product-category" type="text" required class="admin-input" placeholder="مثال: ديكور"></label>
+        <label>السعر<input id="product-price" type="number" min="0" step="0.01" required class="admin-input"></label>
+        <label>السعر القديم <span class="optional">اختياري</span><input id="product-old-price" type="number" min="0" step="0.01" class="admin-input"></label>
+        <label>المقاس<input id="product-size" type="text" required class="admin-input"></label>
+        <label>شارة المنتج <span class="optional">اختياري</span><input id="product-badge" type="text" class="admin-input" placeholder="جديد"></label>
+        <label class="full-width">مسار الصورة<input id="product-image" type="text" required class="admin-input" placeholder="img/product.jpg"></label>
+        <label class="full-width">رفع صورة جديدة <span class="optional">اختياري، يتطلب اتصال GitHub</span><input id="product-image-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="admin-input"></label>
+        <label class="full-width">الوصف<textarea id="product-description" required rows="3" class="admin-input"></textarea></label>
+        <label class="checkbox-label full-width"><input id="product-featured" type="checkbox"><span>عرض المنتج ضمن المنتجات المميزة</span></label>
+      </div>
+      <p id="form-status" class="form-status" role="alert"></p>
+      <div class="dialog-actions"><button type="button" id="cancel-dialog" class="secondary-button">إلغاء</button><button type="submit" class="primary-button"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> حفظ المنتج</button></div>
+    </form>
+  </dialog>
+  <script src="admin.js"></script>
+</body>
+</html>
