@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>فانوس الديكور الملكي - Mouga Market</title>
+    
+    <!-- Google Fonts: Cairo for sleek Arabic typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function() {
+            /* Initialize EmailJS with provided Public Key */
+            emailjs.init("BRMPjEjPFGpnw7VJD");
+        })();
+    </script>
+
+    <style>
+        :root {
+            --primary-gold: #d4af37;
+            --light-gold: #f3e5ab;
+            --dark-gold: #997a15;
+            --bg-dark: #0f0f11;
+            --card-bg: #18181c;
+            --card-border: #2a2a32;
+            --text-main: #f5f5f7;
+            --text-muted: #a1a1aa;
+            --whatsapp-green: #25d366;
+            --whatsapp-dark: #128c7e;
+            --accent-red: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Cairo', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding-bottom: 90px; /* Space for fixed bottom CTA bar */
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+
+        /* --- HEADER & BRANDING --- */
+        header {
+            background: linear-gradient(180deg, rgba(212, 175, 55, 0.15) 0%, rgba(15, 15, 17, 0) 100%);
+            text-align: center;
+            padding: 20px 0 10px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .brand-logo {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--primary-gold);
+            letter-spacing: 1px;
+            text-shadow: 0 2px 10px rgba(212, 175, 55, 0.3);
+            display: inline-block;
+        }
+
+        .brand-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: -4px;
+        }
+
+        /* --- BADGES & ANNOUNCEMENTS --- */
+        .announcement-bar {
+            background: linear-gradient(90deg, #2e2208 0%, #4a380d 50%, #2e2208 100%);
+            border: 1px solid var(--primary-gold);
+            border-radius: 8px;
+            color: var(--light-gold);
+            text-align: center;
+            padding: 8px 12px;
+            margin: 15px 0 20px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        /* --- PRODUCT GALLERY & CARDS --- */
+        .product-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .image-container {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            background: #000;
+        }
+
+        .product-image {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: cover;
+            aspect-ratio: 1/1;
+        }
+
+        .badge-tag {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0, 0, 0, 0.85);
+            color: var(--primary-gold);
+            border: 1px solid var(--primary-gold);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            backdrop-filter: blur(4px);
+        }
+
+        .product-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin: 15px 0 8px;
+        }
+
+        .product-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .mini-tag {
+            background: #23232a;
+            color: var(--light-gold);
+            font-size: 0.78rem;
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* --- OFFERS & PRICING SELECTOR --- */
+        .offers-section {
+            margin: 24px 0;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--primary-gold);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .price-option-card {
+            background: var(--card-bg);
+            border: 2px solid var(--card-border);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .price-option-card.selected {
+            border-color: var(--primary-gold);
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(24, 24, 28, 1) 100%);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+        }
+
+        .radio-indicator {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid var(--text-muted);
+            margin-left: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .price-option-card.selected .radio-indicator {
+            border-color: var(--primary-gold);
+            background-color: var(--primary-gold);
+        }
+
+        .radio-indicator::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--bg-dark);
+            border-radius: 50%;
+            display: none;
+        }
+
+        .price-option-card.selected .radio-indicator::after {
+            display: block;
+        }
+
+        .option-details {
+            flex-grow: 1;
+        }
+
+        .option-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .option-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .option-price-box {
+            text-align: left;
+        }
+
+        .current-price {
+            font-size: 1.3rem;
+            font-weight: 900;
+            color: var(--primary-gold);
+        }
+
+        .old-price {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-decoration: line-through;
+            margin-right: 4px;
+        }
+
+        .best-value-badge {
+            position: absolute;
+            top: -10px;
+            left: 16px;
+            background: var(--primary-gold);
+            color: #000;
+            font-size: 0.7rem;
+            font-weight: 900;
+            padding: 2px 8px;
+            border-radius: 10px;
+            text-transform: uppercase;
+        }
+
+        /* --- FEATURES & HIGHLIGHTS --- */
+        .features-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .feature-item {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 14px 10px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .feature-icon {
+            font-size: 1.5rem;
+            color: var(--primary-gold);
+            margin-bottom: 6px;
+        }
+
+        .feature-text {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        /* --- ORDER FORM --- */
+        .form-section {
+            background: var(--card-bg);
+            border: 1px solid var(--primary-gold);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            position: relative;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .form-header h2 {
+            color: var(--primary-gold);
+            font-size: 1.3rem;
+            font-weight: 800;
+        }
+
+        .form-header p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+
+        .form-group label i {
+            color: var(--primary-gold);
+            margin-left: 6px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 14px;
+            background: #101014;
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 0.95rem;
+            transition: border-color 0.2s ease;
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-gold);
+            box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
+        }
+
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d4af37' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: left 12px center;
+            background-size: 16px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, var(--whatsapp-green) 0%, var(--whatsapp-dark) 100%);
+            color: #ffffff;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 6px 20px rgba(37, 211, 102, 0.35);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        /* --- STICKY MOBILE BOTTOM CTA --- */
+        .sticky-cta {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(24, 24, 28, 0.95);
+            border-top: 1px solid var(--primary-gold);
+            padding: 12px 16px;
+            backdrop-filter: blur(10px);
+            z-index: 999;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.6);
+        }
+
+        .sticky-btn-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: linear-gradient(135deg, var(--primary-gold) 0%, var(--dark-gold) 100%);
+            color: #000;
+            text-decoration: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-weight: 900;
+            font-size: 1.05rem;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+        }
+
+        /* --- CONFIRMATION MODAL --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--primary-gold);
+            border-radius: 16px;
+            padding: 25px 20px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+
+        .modal-icon {
+            font-size: 3rem;
+            color: var(--whatsapp-green);
+            margin-bottom: 12px;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+
+        .modal-desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .modal-btn {
+            background: var(--primary-gold);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 800;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        /* --- SVG ILLUS / FALLBACK PRODUCT SVG --- */
+        .product-svg-wrapper {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle, #25231a 0%, #0c0c0e 100%);
+            padding: 30px;
+        }
+
+        .fanos-svg {
+            max-width: 260px;
+            filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.5));
+        }
+
+        /* TRUST BADGES FOOTER */
+        .trust-section {
+            text-align: center;
+            margin: 25px 0 15px;
+            padding: 15px;
+            border-top: 1px dashed var(--card-border);
+        }
+
+        .trust-title {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .trust-logos {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            font-size: 1.3rem;
+            color: var(--primary-gold);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <div class="brand-logo">MOUGA MARKET</div>
+        <div class="brand-subtitle">متجركم الموثوق في مديونة والنواحي</div>
+    </header>
+
+    <div class="container">
+        <!-- LOCAL ANNOUNCEMENT BANNER -->
+        <div class="announcement-bar">
+            <i class="fa-solid fa-truck-fast"></i>
+            <span>التوصيل بالمجان في مديونة والنواحي + الدفع عند الاستلام</span>
+        </div>
+
+        <!-- PRODUCT SHOWCASE CARD -->
+        <div class="product-card">
+            <div class="image-container">
+                <span class="badge-tag"><i class="fa-solid fa-star"></i> أسود ملكي فاخر</span>
+                
+                <!-- SVG Lantern Illustration for Ultra Fast Loading & High Quality Visual -->
+                <div class="product-svg-wrapper">
+                    <svg class="fanos-svg" viewBox="0 0 200 240" fill="none" xmlns="img/product (2).jpeg">
+                        <!-- Hanging Loop -->
+                        <circle cx="100" cy="20" r="10" stroke="#d4af37" stroke-width="4"/>
+                        <!-- Top Cap -->
+                        <path d="M70 40 L130 40 L115 25 L85 25 Z" fill="#18181c" stroke="#d4af37" stroke-width="3"/>
+                        <path d="M60 55 L140 55 L130 40 L70 40 Z" fill="#222" stroke="#d4af37" stroke-width="3"/>
+                        <!-- Main Hexagonal Body -->
+                        <path d="M50 80 L150 80 L165 150 L140 200 L60 200 L35 150 Z" fill="#121215" stroke="#d4af37" stroke-width="4"/>
+                        <!-- Glass Windows & Warm Glow -->
+                        <polygon points="65,90 135,90 145,145 125,190 75,190 55,145" fill="url(#warmGlow)" opacity="0.85"/>
+                        <!-- Inner Candle & Flame -->
+                        <rect x="88" y="130" width="24" height="45" rx="3" fill="#fdfbf7" stroke="#d4af37" stroke-width="1.5"/>
+                        <path d="M100 108 C105 118, 106 126, 100 130 C94 126, 95 118, 100 108 Z" fill="#ffb703"/>
+                        <circle cx="100" cy="122" r="14" fill="#ffb703" opacity="0.4"/>
+                        <!-- Base -->
+                        <path d="M50 200 L150 200 L160 215 L40 215 Z" fill="#18181c" stroke="#d4af37" stroke-width="3"/>
+                        <rect x="45" y="215" width="110" height="8" rx="2" fill="#d4af37"/>
+                        <!-- Gradients -->
+                        <defs>
+                            <radialGradient id="warmGlow" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stop-color="#ffb703" stop-opacity="1"/>
+                                <stop offset="60%" stop-color="#fb8500" stop-opacity="0.6"/>
+                                <stop offset="100%" stop-color="#023047" stop-opacity="0.1"/>
+                            </radialGradient>
+                        </defs>
+                    </svg>
+                </div>
+            </div>
+
+            <h1 class="product-title">فانوس الديكور الملكي ✨</h1>
+            
+            <div class="product-tags">
+                <span class="mini-tag"><i class="fa-solid fa-gem"></i> لون أسود ملكي</span>
+                <span class="mini-tag"><i class="fa-solid fa-lightbulb"></i> إضاءة LED دافئة وآمنة</span>
+                <span class="mini-tag"><i class="fa-solid fa-house"></i> للمنزل والصالون والمناسبات</span>
+            </div>
+
+            <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.5;">
+                أضيفي لمسة دافئة وراقية لدارك مع الفانوس الملكي ذو التصميم العصري الجذاب. يعمل بإضاءة LED ناعمة وآمنة 100% بدون حاجة للنار.
+            </p>
+        </div>
+
+        <!-- PRICING & QUANTITY SELECTION -->
+        <div class="offers-section">
+            <div class="section-title">
+                <i class="fa-solid fa-tags"></i>
+                <span>اختر العرض المناسب لك:</span>
+            </div>
+
+            <!-- Single Fanos Option -->
+            <div class="price-option-card" id="card-1" onclick="selectPackage(1, 'فانوس واحد (35 درهم)', 35)">
+                <div class="radio-indicator"></div>
+                <div class="option-details">
+                    <div class="option-title">فانوس واحد</div>
+                    <div class="option-desc">مثالي للديكور الشخصي</div>
+                </div>
+                <div class="option-price-box">
+                    <div class="current-price">35 MAD</div>
+                </div>
+            </div>
+
+            <!-- Double Fanos Option (Best Value) -->
+            <div class="price-option-card selected" id="card-2" onclick="selectPackage(2, '2 فنانيس (65 درهم)', 65)">
+                <span class="best-value-badge">العرض الأفضل 🔥</span>
+                <div class="radio-indicator"></div>
+                <div class="option-details">
+                    <div class="option-title">2 فنانيس</div>
+                    <div class="option-desc">توفير خاص + توصيل مجاني</div>
+                </div>
+                <div class="option-price-box">
+                    <div class="current-price">65 MAD</div>
+                    <span class="old-price">70 MAD</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- FEATURES GRID -->
+        <div class="features-grid">
+            <div class="feature-item">
+                <i class="fa-solid fa-shield-halved feature-icon"></i>
+                <div class="feature-text">جودة عالية ومتينة</div>
+            </div>
+            <div class="feature-item">
+                <i class="fa-solid fa-wand-magic-sparkles feature-icon"></i>
+                <div class="feature-text">إضاءة دافئة مريحة</div>
+            </div>
+            <div class="feature-item">
+                <i class="fa-solid fa-truck-ramp-box feature-icon"></i>
+                <div class="feature-text">توصيل مجاني لمديونة</div>
+            </div>
+            <div class="feature-item">
+                <i class="fa-solid fa-hand-holding-dollar feature-icon"></i>
+                <div class="feature-text">الدفع عند الاستلام</div>
+            </div>
+        </div>
+
+        <!-- ORDER FORM SECTION -->
+        <div class="form-section" id="orderFormContainer">
+            <div class="form-header">
+                <h2>استمارة الطلب المباشر 📝</h2>
+                <p>عمر المعطيات ديالك لتحت وتأكيد الطلب فـ دقيقة</p>
+            </div>
+
+            <form id="orderForm">
+                <!-- Selected Quantity (Hidden or Select Dropdown) -->
+                <div class="form-group">
+                    <label for="quantitySelect"><i class="fa-solid fa-box"></i> الكمية المطلوبة:</label>
+                    <select id="quantitySelect" name="quantity" class="form-control" onchange="syncPackageFromSelect(this.value)">
+                        <option value="فانوس واحد (35 درهم)">فانوس واحد (35 درهم)</option>
+                        <option value="2 فنانيس (65 درهم)" selected>2 فنانيس (65 درهم)</option>
+                    </select>
+                </div>
+
+                <!-- Full Name -->
+                <div class="form-group">
+                    <label for="fullName"><i class="fa-solid fa-user"></i> الاسم الكامل:</label>
+                    <input type="text" id="fullName" name="user_name" class="form-control" placeholder="أدخل اسمك الكامل" required>
+                </div>
+
+                <!-- Full Address in Mediouna -->
+                <div class="form-group">
+                    <label for="address"><i class="fa-solid fa-location-dot"></i> العنوان بالكامل في مديونة والنواحي:</label>
+                    <input type="text" id="address" name="user_address" class="form-control" placeholder="مثال: حي الشباب، زنقة 5، مديونة" required>
+                </div>
+
+                <!-- WhatsApp / Phone Number -->
+                <div class="form-group">
+                    <label for="phone"><i class="fa-brands fa-whatsapp"></i> رقم الواتساب / الهاتف:</label>
+                    <input type="tel" id="phone" name="user_phone" class="form-control" placeholder="06XX XX XX XX" required pattern="[0-9]{10}">
+                </div>
+
+                <!-- Preferred Delivery Time -->
+                <div class="form-group">
+                    <label for="deliveryTime"><i class="fa-solid fa-clock"></i> الوقت المفضل للتوصيل:</label>
+                    <input type="text" id="deliveryTime" name="delivery_time" class="form-control" placeholder="مثال: صباحاً / بعد العصر / المساء" required>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    <i class="fa-brands fa-whatsapp" style="font-size: 1.4rem;"></i>
+                    <span>تأكيد الطلب الآن</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- TRUST FOOTER -->
+        <div class="trust-section">
+            <div class="trust-title">تسوق بآمان مع Mouga Market</div>
+            <div class="trust-logos">
+                <i class="fa-solid fa-shield-heart" title="تسوق آمن"></i>
+                <i class="fa-solid fa-truck-fast" title="توصيل سريع"></i>
+                <i class="fa-solid fa-headset" title="دعم متواصل"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- STICKY MOBILE BOTTOM BAR -->
+    <div class="sticky-cta">
+        <a href="#orderFormContainer" class="sticky-btn-link">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <span>اطلب الآن - التوصيل مجاني</span>
+        </a>
+    </div>
+
+    <!-- CONFIRMATION MODAL -->
+    <div class="modal-overlay" id="successModal">
+        <div class="modal-content">
+            <i class="fa-solid fa-circle-check modal-icon"></i>
+            <div class="modal-title">تم إرسال طلبك بنجاح!</div>
+            <div class="modal-desc" id="modalMessage">
+                جاري توجيهك إلى الواتساب لإتمام التأكيد مع فريق العمل...
+            </div>
+            <button class="modal-btn" onclick="closeModal()">موافق</button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // CONFIGURATION
+        const EMAILJS_SERVICE_ID = "service_dftcmfx";
+        const EMAILJS_TEMPLATE_ID = "template_gzg27fo";
+        const WHATSAPP_NUMBER = "212726604185";
+
+        let selectedPackageValue = "2 فنانيس (65 درهم)";
+
+        // Select package via card click
+        function selectPackage(id, packageLabel, price) {
+            document.querySelectorAll('.price-option-card').forEach(card => card.classList.remove('selected'));
+            document.getElementById('card-' + id).classList.add('selected');
+            
+            selectedPackageValue = packageLabel;
+            document.getElementById('quantitySelect').value = packageLabel;
+        }
+
+        // Sync card when select changes
+        function syncPackageFromSelect(val) {
+            selectedPackageValue = val;
+            if(val.includes("1") || val.includes("واحد")) {
+                document.querySelectorAll('.price-option-card').forEach(card => card.classList.remove('selected'));
+                document.getElementById('card-1').classList.add('selected');
+            } else {
+                document.querySelectorAll('.price-option-card').forEach(card => card.classList.remove('selected'));
+                document.getElementById('card-2').classList.add('selected');
+            }
+        }
+
+        // Form Submit Handler
+        document.getElementById('orderForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            const originalBtnHtml = submitBtn.innerHTML;
+
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>جاري تأكيد الطلب...</span>`;
+
+            // Extract Form Data
+            const quantity = document.getElementById('quantitySelect').value;
+            const name = document.getElementById('fullName').value.trim();
+            const address = document.getElementById('address').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const deliveryTime = document.getElementById('deliveryTime').value.trim();
+
+            // Prepare EmailJS Template Parameters
+            const templateParams = {
+                recipient: "mogamarket20@gmail.com",
+                quantity: quantity,
+                user_name: name,
+                user_address: address,
+                user_phone: phone,
+                delivery_time: deliveryTime,
+                order_date: new Date().toLocaleString('ar-MA')
+            };
+
+            // 1. Send Email Notification via EmailJS
+            emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
+                .then(function(response) {
+                    console.log('EMAILJS SUCCESS!', response.status, response.text);
+                    finishSubmission(quantity, name, address, phone, deliveryTime);
+                }, function(error) {
+                    console.warn('EMAILJS FAILED (Proceeding to WhatsApp anyway)...', error);
+                    // Even if EmailJS encounters an error, we gracefully proceed to WhatsApp for the user
+                    finishSubmission(quantity, name, address, phone, deliveryTime);
+                });
+        });
+
+        function finishSubmission(quantity, name, address, phone, deliveryTime) {
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Format WhatsApp Message
+            const whatsappMessage = 
+                `*طلب جديد - فانوس الديكور الملكي* 🌙%0A%0A` +
+                `• *الكمية:* ${quantity}%0A` +
+                `• *الاسم الكامل:* ${name}%0A` +
+                `• *العنوان:* ${address}%0A` +
+                `• *رقم الهاتف / الواتساب:* ${phone}%0A` +
+                `• *الوقت المفضل للتوصيل:* ${deliveryTime}%0A%0A` +
+                `*التوصيل بالمجان في مديونة والنواحي - الدفع عند الاستلام*`;
+
+            const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMessage}`;
+
+            // Show Success Modal
+            document.getElementById('successModal').classList.add('active');
+
+            // Redirect to WhatsApp after 1.5 seconds
+            setTimeout(() => {
+                window.open(whatsappUrl, '_blank');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<i class="fa-brands fa-whatsapp" style="font-size: 1.4rem;"></i><span>تأكيد الطلب الآن</span>`;
+            }, 1500);
+        }
+
+        function closeModal() {
+            document.getElementById('successModal').classList.remove('active');
+        }
+    </script>
+</body>
+</html>
