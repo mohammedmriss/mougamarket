@@ -1,29 +1,5 @@
 [
   {
-    "id": 3,
-    "title": "مصباح طاولة دافئ",
-    "category": "إضاءة",
-    "price": 39.99,
-    "oldPrice": 49.99,
-    "size": "ارتفاع 32 سم",
-    "image": "img/table-lamp.jpg",
-    "description": "إضاءة جانبية ناعمة بتصميم بسيط يناسب غرفة النوم أو المكتب.",
-    "featured": true,
-    "badge": "عرض خاص"
-  },
-  {
-    "id": 4,
-    "title": "وسادة قطنية محايدة",
-    "category": "منسوجات",
-    "price": 18.75,
-    "oldPrice": null,
-    "size": "45 × 45 سم",
-    "image": "img/cotton-cushion.jpg",
-    "description": "وسادة قطنية ناعمة بلون محايد لتنسيق مريح وأنيق.",
-    "featured": false,
-    "badge": ""
-  },
-  {
     "id": 5,
     "title": "فوانيس الديكور الملكية",
     "category": "فانوس",
