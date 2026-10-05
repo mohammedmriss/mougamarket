@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منظم العطرية الفاخر 9 قطع - Mouga Market</title>
+    <title>طبلة قابلة للطي ورحلات - Mouga Market</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -12,6 +12,7 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <style>
         body { font-family: system-ui, -apple-system, sans-serif; }
+        .thumb-active { border-color: #38bdf8 !important; opacity: 1 !important; }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen">
@@ -23,7 +24,7 @@
                 <span>🌊 MOUGA MARKET</span>
             </a>
             <span class="bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs md:text-sm px-3 py-1 rounded-full font-semibold">
-                حسب الطلب متوفر
+                عرض خاص - كمية محدودة
             </span>
         </div>
     </header>
@@ -32,43 +33,48 @@
     <main class="max-w-4xl mx-auto px-4 py-8 space-y-10">
 
         <!-- Hero Section -->
-        <section class="grid md:grid-cols-2 gap-8 items-center bg-slate-800/60 p-6 rounded-2xl border border-slate-700/60 shadow-xl">
-            <!-- Product Images -->
+        <section class="grid md:grid-cols-2 gap-8 items-start bg-slate-800/60 p-6 rounded-2xl border border-slate-700/60 shadow-xl">
+            
+            <!-- Product Gallery (7 Images) -->
             <div class="space-y-4">
-                <div class="relative rounded-xl overflow-hidden border-2 border-sky-500/30 shadow-md">
-                    <img src="img/spices/p (1).jpeg" alt="Service à Épices 9 Pcs" class="w-full h-auto object-cover">
-                    <span class="absolute top-3 right-3 bg-red-600 text-white font-extrabold text-sm px-3 py-1 rounded-full shadow">
+                <!-- Main Image -->
+                <div class="relative rounded-xl overflow-hidden border-2 border-sky-500/30 shadow-md bg-slate-950">
+                    <img id="main-product-img" src="img/1000151056.png" alt="طبلة قابلة للطي" class="w-full h-80 md:h-96 object-contain transition-all duration-300">
+                    <span class="absolute top-3 right-3 bg-red-600 text-white font-extrabold text-xs md:text-sm px-3 py-1 rounded-full shadow z-10">
                         توصيل مجاني لمديونة / تيط مليل
                     </span>
                 </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <img src="img/spices/p (2).jpeg" alt="Organiseur en bois" class="rounded-lg border border-slate-700 object-cover w-full h-32">
-                    <div class="bg-slate-900/80 rounded-lg border border-slate-700 flex flex-col items-center justify-center p-2 text-center">
-                        <i class="fa-solid fa-gem text-amber-400 text-2xl mb-1"></i>
-                        <span class="text-xs text-slate-300 font-bold">طراز رفيع وتصميم مغربي أنيق</span>
-                    </div>
+
+                <!-- 6 Thumbnails Grid -->
+                <div class="grid grid-cols-6 gap-2">
+                    <img src="img/table/p (1).png" onclick="changeImage(this)" class="gallery-thumb thumb-active w-full h-16 rounded-lg border-2 border-slate-700 object-cover cursor-pointer opacity-70 hover:opacity-100 transition">
+                    <img src="img/table/p (2).png" onclick="changeImage(this)" class="gallery-thumb w-full h-16 rounded-lg border-2 border-slate-700 object-cover cursor-pointer opacity-70 hover:opacity-100 transition">
+                    <img src="img/table/p (3).png" onclick="changeImage(this)" class="gallery-thumb w-full h-16 rounded-lg border-2 border-slate-700 object-cover cursor-pointer opacity-70 hover:opacity-100 transition">
+                    <img src="img/table/p (4).png" onclick="changeImage(this)" class="gallery-thumb w-full h-16 rounded-lg border-2 border-slate-700 object-cover cursor-pointer opacity-70 hover:opacity-100 transition">
+                    <img src="img/table/p (5).png" onclick="changeImage(this)" class="gallery-thumb w-full h-16 rounded-lg border-2 border-slate-700 object-cover cursor-pointer opacity-70 hover:opacity-100 transition">
+                    <img src="img/table/p (6).png" onclick="changeImage(this)" class="gallery-thumb w-full h-16 rounded-lg border-2 border-slate-700 object-cover cursor-pointer opacity-70 hover:opacity-100 transition">
                 </div>
             </div>
 
             <!-- Product Info & Pricing -->
             <div class="space-y-6">
-                <div class="inline-block bg-sky-900/40 text-sky-300 text-xs font-semibold px-3 py-1 rounded-full border border-sky-700/50">
-                    GERMAN LAB - ÉLÉGANCE & QUALITÉ
+                <div class="inline-block bg-amber-900/40 text-amber-300 text-xs font-semibold px-3 py-1 rounded-full border border-amber-700/50">
+                    صغيرة وخفيفة وسهلة الحمل
                 </div>
 
                 <h1 class="text-2xl md:text-3xl font-extrabold text-white leading-tight">
-                    طقم العطرية الفاخر 9 قطع زجاجي مع حامل خشبي أنيق
+                    طبلة قابلة للطي خفيفة الوزن للرحلات والمخيمات والمنزل
                 </h1>
 
                 <p class="text-slate-300 text-sm leading-relaxed">
-                    نظم مطبخك بأناقة وفخامة! طقم عطرية متكامل يجمع بين جودة الزجاج المنقوش بالذهبي وخشب البامبو المقاوم، ليحافظ على نكهات التوابل طازجة ويعطي لمسة راقية لمطبخك.
+                    عملية جداً وعالية الجودة! طبلة مثالية للنزهات، الرحلات الخارجية، أو الاستخدام اليومي في البيت. تتطوى على شكل حقيبة سهلة الحمل وتتحمل أوزان ثقيلة.
                 </p>
 
                 <!-- Pricing Box -->
                 <div class="bg-slate-900 p-4 rounded-xl border border-sky-500/30 flex items-center justify-between">
                     <div>
                         <span class="text-slate-400 text-xs block">الثمن الخاص:</span>
-                        <span class="text-3xl font-black text-amber-400">150 <span class="text-lg font-bold">درهم</span></span>
+                        <span class="text-3xl font-black text-amber-400">250 <span class="text-lg font-bold">درهم</span></span>
                     </div>
                     <div class="text-right">
                         <span class="inline-flex items-center gap-1 text-emerald-400 text-xs font-bold bg-emerald-950/60 px-2.5 py-1 rounded-md border border-emerald-800/40">
@@ -80,16 +86,16 @@
                 <!-- Features Bullets -->
                 <ul class="space-y-2 text-sm text-slate-200">
                     <li class="flex items-center gap-2">
-                        <i class="fa-solid fa-circle-check text-sky-400"></i>
-                        <span><strong>9 علب زجاجية (Bocaux à épices):</strong> غطاء محكم لحفظ النكهة.</span>
+                        <i class="fa-solid fa-ruler-combined text-sky-400"></i>
+                        <span><strong>الأبعاد:</strong> 80 سم × 60 سم × الارتفاع 70 سم.</span>
                     </li>
                     <li class="flex items-center gap-2">
-                        <i class="fa-solid fa-circle-check text-sky-400"></i>
-                        <span><strong>حامل خيزران (Étagère en Bambou):</strong> قوي، متين ومنظم.</span>
+                        <i class="fa-solid fa-weight-hanging text-sky-400"></i>
+                        <span><strong>الوزن والحمل:</strong> الوزن 3.4 كغم وتتحمل حتى 50 كغم (110 أرتال).</span>
                     </li>
                     <li class="flex items-center gap-2">
-                        <i class="fa-solid fa-circle-check text-sky-400"></i>
-                        <span><strong>سهل التنظيف ومقاوم للرطوبة (Facile à nettoyer).</strong></span>
+                        <i class="fa-solid fa-suitcase text-sky-400"></i>
+                        <span><strong>سهولة التخزين:</strong> تتطوى بمهارة لتصبح بحجم صغير ومحمول.</span>
                     </li>
                 </ul>
 
@@ -142,7 +148,7 @@
                 <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-700 text-sm space-y-2">
                     <div class="flex justify-between text-slate-300">
                         <span>المنتج:</span>
-                        <span class="font-bold text-white">طقم العطرية 9 قطع (BM-9DA)</span>
+                        <span class="font-bold text-white">طبلة قابلة للطي (Table Pliante 80x60)</span>
                     </div>
                     <div class="flex justify-between text-slate-300">
                         <span>التوصيل:</span>
@@ -150,7 +156,7 @@
                     </div>
                     <div class="border-t border-slate-800 pt-2 flex justify-between text-base font-bold text-amber-400">
                         <span>المجموع الكلي:</span>
-                        <span>150.00 DH</span>
+                        <span>250.00 DH</span>
                     </div>
                 </div>
 
@@ -169,8 +175,18 @@
         <p>© 2026 MOUGA MARKET. جميع الحقوق محفوظة.</p>
     </footer>
 
-    <!-- Script EmailJS Integration -->
+    <!-- Scripts -->
     <script>
+        // Gallery Switcher Function
+        function changeImage(element) {
+            document.getElementById("main-product-img").src = element.src;
+            document.querySelectorAll(".gallery-thumb").forEach(thumb => {
+                thumb.classList.remove("thumb-active");
+            });
+            element.classList.add("thumb-active");
+        }
+
+        // EmailJS Integration
         const EMAILJS_CONFIG = {
             publicKey: "BRMPjEjPFGpnw7VJD",
             serviceId: "service_dftcmfx",
@@ -196,8 +212,8 @@
                 customer_address: formData.get("customer_address"),
                 customer_email: formData.get("customer_email") || "غير محدد",
                 customer_note: formData.get("customer_note") || "لا توجد",
-                order_details: "Service à Épices 9 PCS (Modèle BM-9DA) x1 = 150.00 DH",
-                order_total: "150.00 DH"
+                order_details: "Table Pliante (80x60x70 cm) x1 = 250.00 DH",
+                order_total: "250.00 DH"
             };
 
             try {
