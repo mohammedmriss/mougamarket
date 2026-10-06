@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MougaMarket — طقم منظمات التوابل</title>
+<!-- EmailJS SDK -->
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap');
+:root{--g:#064d42;--g2:#073a33;--gold:#d69a2c;--cream:#faf8f1;--red:#c92d38;--ink:#183b36}
+*{box-sizing:border-box}body{margin:0;font-family:Cairo,Arial,sans-serif;color:var(--ink);background:#fff}button,input{font:inherit}
+.top{background:var(--g);color:#fff;padding:8px 5%;display:flex;justify-content:space-between;font-size:13px;font-weight:800;align-items:center}.top span{margin-left:25px}
+.timer{direction:ltr;display:inline-flex;gap:4px;vertical-align:middle}.timer b{background:#f0d16e;color:#17463e;border-radius:4px;padding:0 7px;font-size:16px}
+nav{height:74px;display:flex;align-items:center;justify-content:space-between;padding:0 5%;border-bottom:1px solid #eee;position:sticky;top:0;background:#fff;z-index:20}.logo{font-size:25px;font-weight:900;color:var(--g)}.logo i{color:var(--gold);font-style:normal}.logo small{display:block;font-size:9px;color:#777;margin-top:-7px}.links{display:flex;gap:27px;font-size:14px;font-weight:800}.links a{color:inherit;text-decoration:none}.orderTop,.goldBtn{border:0;background:linear-gradient(135deg,#edb73e,#bc7914);color:white;border-radius:30px;padding:11px 23px;font-weight:900;cursor:pointer}
+.hero{display:grid;grid-template-columns:1.08fr .92fr;background:linear-gradient(100deg,#f6f1e6,#fff 55%,#faf5eb)}.heroImg{min-height:520px;background:#e8e0d1;position:relative}.heroImg img{width:100%;height:100%;object-fit:cover;display:block}.offer{position:absolute;top:28px;left:28px;width:112px;height:112px;border-radius:50%;background:var(--g);border:5px solid #e2b342;color:#f2cb65;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:900;box-shadow:0 10px 25px #0002}.offer b{font-size:28px;line-height:1}.offer small{color:#fff}.heroText{padding:55px 9%;display:flex;flex-direction:column;justify-content:center}.pill{display:inline-block;background:#efdfbe;color:#966319;border-radius:25px;padding:4px 17px;width:max-content;font-weight:900}.hero h1{font-size:43px;line-height:1.25;color:var(--g);margin:12px 0}.hero p{font-size:15px;color:#58645f}.stars{color:#e2a621;font-size:22px}.stars span{color:#555;font-size:11px}.prices{display:flex;align-items:center;gap:15px;margin:8px 0}.old{text-decoration:line-through;color:#888}.price{font-size:43px;font-weight:900;color:var(--g)}.sale{background:var(--red);color:#fff;padding:5px 10px;border-radius:7px;font-weight:900}
+.bigBtn{border:0;border-radius:35px;padding:15px 25px;background:linear-gradient(135deg,#efb73d,#c57f12);color:#fff;font-weight:900;font-size:16px;cursor:pointer;box-shadow:0 9px 22px #c88a2635}.trust{font-size:12px;font-weight:900;margin-top:14px;display:flex;gap:22px}
+.gallery{display:flex;gap:12px;justify-content:center;padding:13px;background:#fff}.thumb{width:110px;height:75px;border-radius:9px;overflow:hidden;border:2px solid #ddd;cursor:pointer}.thumb.active{border-color:var(--gold)}.thumb img{width:100%;height:100%;object-fit:cover}
+.band{background:var(--g);color:#fff;text-align:center;padding:15px}.count{display:flex;justify-content:center;gap:10px;direction:ltr}.count div{border:2px solid #d8aa39;border-radius:9px;padding:3px 15px}.count b{display:block;color:#f1c75d;font-size:24px;line-height:1}.count small{font-size:10px}
+.features{display:grid;grid-template-columns:repeat(4,1fr);padding:32px 7%}.feature{text-align:center;border-left:1px solid #ddd;padding:0 20px}.feature:last-child{border:0}.feature .ic{font-size:30px}.feature h3{margin:2px}.feature p{font-size:11px;color:#777}
+.section{padding:55px 7%}.split{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:center}.photo{border-radius:18px;overflow:hidden;box-shadow:0 15px 35px #17463d14}.photo img{width:100%;display:block}.copy h2{font-size:29px;color:var(--g);line-height:1.4}.copy ul{list-style:none;padding:0}.copy li{margin:9px 0}.copy li:before{content:"✓";color:#08734f;background:#dff1e4;border-radius:50%;padding:0 6px;margin-left:7px;font-weight:900}
+.orderSection{background:#f6f3ec}.orderWrap{display:grid;grid-template-columns:1.35fr .65fr;gap:22px}.formBox{background:var(--g);color:#fff;border-radius:16px;padding:24px}.formGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{background:#fff;border-radius:8px;padding:7px 10px}.field label{display:block;font-size:10px;color:#666;font-weight:900}.field input{width:100%;border:0;outline:0;font-size:13px}.choices{display:flex;gap:10px;margin:10px 0}.choice{flex:1;background:#fff;color:var(--g);border:2px solid transparent;border-radius:9px;text-align:center;padding:9px;font-weight:900;cursor:pointer}.choice.active{border-color:var(--gold)}.total{background:#0d6758;border-radius:8px;text-align:center;padding:10px;font-weight:900}.side{background:#fff;border-radius:16px;padding:22px;box-shadow:0 10px 25px #0000000d}.side li{list-style:none;border-bottom:1px solid #eee;padding:8px;font-size:13px}.side ul{padding:0}
+.reviews{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.review{border:1px solid #eee;border-radius:12px;padding:15px;box-shadow:0 5px 20px #00000008}.avatar{display:inline-flex;width:38px;height:38px;border-radius:50%;align-items:center;justify-content:center;background:#e5c98c;font-weight:900}.review p{font-size:12px;color:#666}.faq{max-width:850px;margin:auto}.faqItem{border-bottom:1px solid #ddd}.q{width:100%;border:0;background:none;text-align:right;padding:16px 0;font-weight:900;color:var(--g);cursor:pointer;display:flex;justify-content:space-between}.a{display:none;color:#666;font-size:12px;padding-bottom:13px}.faqItem.open .a{display:block}
+footer{background:var(--g2);color:#fff;padding:30px 7%;display:flex;justify-content:space-between;align-items:center}.social{display:flex;gap:12px}.social span{width:30px;height:30px;border:1px solid #8ca8a2;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.toast{position:fixed;right:20px;bottom:20px;background:var(--g);color:#fff;padding:12px 18px;border-radius:9px;transform:translateY(100px);transition:.3s;z-index:50}.toast.show{transform:none}
+@media(max-width:900px){.hero,.split,.orderWrap{grid-template-columns:1fr}.heroText{order:-1}.features{grid-template-columns:1fr 1fr}.reviews{grid-template-columns:1fr}.links{display:none}}
+@media(max-width:560px){.top span:first-child{display:none}.top{justify-content:center}.hero h1{font-size:31px}.heroText{padding:35px 6%}.heroImg{min-height:350px}.formGrid{grid-template-columns:1fr}.features{padding:25px 3%}.feature{padding:8px}.gallery .thumb{width:82px;height:60px}footer{flex-direction:column;gap:15px}}
+</style>
+</head>
+<body>
+<div class="top"><div><span>🚚 التوصيل بالمجان في الدار البيضاء والنواحي</span><span>💳 الدفع عند الاستلام</span></div><div>⏰ العرض ينتهي خلال <span class="timer"><b id="h">12</b>:<b id="m">34</b>:<b id="s">56</b></span></div></div>
+<nav><div class="logo">🛒 Mouga<i>Market</i><small>كل ما تحتاجه في مكان واحد</small></div><div class="links"><a href="#home">الرئيسية</a><a href="#features">مميزات المنتج</a><a href="#reviews">آراء العملاء</a><a href="#faq">الأسئلة الشائعة</a></div><button class="orderTop" onclick="goOrder()">🛒 اطلب الآن</button></nav>
+
+<section class="hero" id="home">
+<div class="heroImg"><img id="heroImage" src="img/rang/p (1).jpg" alt="طقم منظمات التوابل"><div class="offer"><b>300</b>DH<small>فقط</small></div></div>
+<div class="heroText"><span class="pill">🌿 تصميم فاخر للمطبخ المغربي</span><h1>طقم منظمات التوابل<br>الكامل</h1><p>رتب مطبخك بطريقة أنيقة وعملية مع طقم منظمات التوابل المصمم ليجمع بين الجمال والتنظيم وسهولة الاستعمال.</p><div class="stars">★★★★★ <span>تقييم ممتاز من زبناء المتجر</span></div><div class="prices"><span class="old">429 DH</span><strong class="price">300 DH</strong><span class="sale">خصم 30%</span></div><button class="bigBtn" onclick="goOrder()">🛒 اطلب الآن والدفع عند الاستلام</button><div class="trust">🚚 التوصيل بالمجان &nbsp; | &nbsp; 💳 الدفع عند الاستلام</div></div>
+</section>
+
+<div class="gallery">
+<div class="thumb active" onclick="changeImg('img/rang/p (1).jpg',this)"><img src="img/rang/p (1).jpg"></div>
+<div class="thumb" onclick="changeImg('img/rang/p (3).jpg',this)"><img src="img/rang/p (3).jpg"></div>
+<div class="thumb" onclick="changeImg('img/rang/p (2).jpg',this)"><img src="img/rang/p (2).jpg"></div>
+<div class="thumb" onclick="changeImg('img/rang/p (4).jpg',this)"><img src="img/rang/p (4).jpg"></div>
+</div>
+
+<div class="band"><b>⏰ سارع بالاستفادة من العرض قبل انتهائه</b><div class="count"><div><b id="bh">12</b><small>ساعة</small></div><div><b id="bm">34</b><small>دقيقة</small></div><div><b id="bs">56</b><small>ثانية</small></div></div></div>
+
+<section class="features" id="features">
+<div class="feature"><div class="ic">🛡️</div><h3>جودة ممتازة</h3><p>مواد عالية الجودة ومتينة</p></div><div class="feature"><div class="ic">🌿</div><h3>مظهر طبيعي</h3><p>مطبخ مرتب وأنيق دائماً</p></div><div class="feature"><div class="ic">💎</div><h3>تصميم فاخر</h3><p>تفاصيل ذهبية وزخارف أنيقة</p></div><div class="feature"><div class="ic">🍴</div><h3>أفضل تنظيم</h3><p>كل التوابل في مكان واحد</p></div>
+</section>
+
+<section class="section"><div class="split"><div class="photo"><img src="img/rang/p (4).jpg" alt="منظمات التوابل في المطبخ"></div><div class="copy"><span class="pill">كل شيء مرتب أمامك</span><h2>خلي مطبخك أكثر تنظيماً وأناقة</h2><ul><li>9 أواني زجاجية لتخزين وتنظيم التوابل.</li><li>رف أنيق للحفاظ على ترتيب الأواني.</li><li>تصميم يناسب المطابخ العصرية والكلاسيكية.</li><li>الوصول إلى التوابل بسرعة وسهولة.</li><li>مناسب للاستعمال اليومي أو كهدية مميزة.</li></ul></div></div></section>
+
+<section class="section orderSection" id="order"><div class="orderWrap">
+<div class="formBox"><h2 style="text-align:center">أملا معلوماتك الآن</h2><div class="formGrid"><div class="field"><label>الاسم الكامل *</label><input id="name" placeholder="مثال: محمد العلوي"></div><div class="field"><label>رقم الهاتف *</label><input id="phone" placeholder="06XXXXXXXX" type="tel"></div><div class="field"><label>المدينة *</label><input id="city" placeholder="الدار البيضاء"></div><div class="field"><label>العنوان بالتفصيل *</label><input id="address" placeholder="الحي، الشارع، رقم المنزل"></div></div><h3>اختر الكمية</h3><div class="choices"><div class="choice active" onclick="qty(1,this)">طقم واحد<br><b>300 DH</b></div><div class="choice" onclick="qty(2,this)">جوج أطقم<br><b>550 DH</b></div></div><div class="total">المجموع الإجمالي: <span id="total">300</span> DH</div><button class="bigBtn" id="submit-btn" style="width:100%;margin-top:10px" onclick="submitOrder()">🛒 اطلب الآن والدفع عند الاستلام</button><small style="display:block;text-align:center;margin-top:6px">🔒 معلوماتك محمية — الدفع عند الاستلام</small></div>
+<div class="side"><h3>لماذا تطلب من MougaMarket؟</h3><ul><li>🚚 التوصيل بالمجان</li><li>💵 الدفع عند الاستلام</li><li>📞 تأكيد الطلب هاتفياً</li><li>✅ إمكانية المعاينة عند التسليم</li><li>🔒 بياناتك في أمان</li></ul><div style="background:#f4ead2;border-radius:10px;padding:12px;text-align:center;font-size:12px">العرض محدود والكمية محدودة — اطلب الآن.</div></div>
+</div></section>
+
+<section class="section" id="reviews" style="background:#fbfaf7"><div style="text-align:center"><span class="pill">آراء الزبناء ⭐</span><h2>ماذا يقول عملاؤنا؟</h2></div><div class="reviews">
+<div class="review"><span class="avatar">س</span> <b>سارة من الدار البيضاء</b><div class="stars">★★★★★</div><p>الطقم زوين بزاف ويعطي للمطبخ شكل مرتب وأنيق.</p></div>
+<div class="review"><span class="avatar">أ</span> <b>أحمد من الرباط</b><div class="stars">★★★★★</div><p>عجبني التنظيم خصوصاً حيث جمع ليا جميع التوابل.</p></div>
+<div class="review"><span class="avatar">ف</span> <b>فاطمة من مراكش</b><div class="stars">★★★★★</div><p>التصميم جميل والرف كيعطي شكل فاخر للمطبخ.</p></div>
+</div></section>
+
+<section class="section" id="faq"><div style="text-align:center"><span class="pill">الأسئلة الشائعة</span><h2>عندك شي سؤال؟</h2></div><div class="faq">
+<div class="faqItem"><button class="q">واش التوصيل متوفر لجميع المدن؟ <b>+</b></button><div class="a">نعم، التوصيل متوفر لجميع المدن المغربية حسب مناطق التغطية.</div></div>
+<div class="faqItem"><button class="q">شحال كتحتاج الطلبية باش توصل؟ <b>+</b></button><div class="a">غالباً بين 24 و72 ساعة، حسب المدينة وشركة التوصيل.</div></div>
+<div class="faqItem"><button class="q">واش نقدر نخلص ملي توصل؟ <b>+</b></button><div class="a">نعم، الأداء عند الاستلام وما كتخلص والو مسبقاً.</div></div>
+<div class="faqItem"><button class="q">واش نقدر نعاين المنتج؟ <b>+</b></button><div class="a">يمكنك طلب المعاينة عند التسليم حسب شروط شركة التوصيل.</div></div>
+</div></section>
+
+<footer><div class="logo" style="color:#fff">🛒 Mouga<i>Market</i><small style="color:#bbb">كل ما تحتاجه في مكان واحد</small></div><div>الطلب &nbsp; | &nbsp; سياسة الخصوصية &nbsp; | &nbsp; شروط الاستخدام</div><div class="social"><span>f</span><span>◎</span><span>▶</span></div></footer>
+<div class="toast" id="toast"></div>
+
+<script>
+// EmailJS Configuration
+const EMAILJS_CONFIG = {
+    publicKey: "BRMPjEjPFGpnw7VJD",
+    serviceId: "service_dftcmfx",
+    templateId: "template_gzg27fo"
+};
+
+let left = 12*3600 + 34*60 + 56, selected = 1;
+
+function tick(){
+    if(left > 0) left--;
+    let h = Math.floor(left/3600), m = Math.floor(left%3600/60), s = left%60;
+    ['h','bh'].forEach(x => document.getElementById(x).textContent = String(h).padStart(2,'0'));
+    ['m','bm'].forEach(x => document.getElementById(x).textContent = String(m).padStart(2,'0'));
+    ['s','bs'].forEach(x => document.getElementById(x).textContent = String(s).padStart(2,'0'));
+}
+setInterval(tick, 1000);
+
+function goOrder(){
+    document.getElementById('order').scrollIntoView({behavior:'smooth'});
+}
+
+function changeImg(src, el){
+    document.getElementById('heroImage').src = src;
+    document.querySelectorAll('.thumb').forEach(x => x.classList.remove('active'));
+    el.classList.add('active');
+}
+
+function qty(n, el){
+    selected = n;
+    document.querySelectorAll('.choice').forEach(x => x.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('total').textContent = n === 2 ? '550' : '300';
+}
+
+function toast(t){
+    let x = document.getElementById('toast');
+    x.textContent = t;
+    x.classList.add('show');
+    setTimeout(() => x.classList.remove('show'), 3000);
+}
+
+async function submitOrder(){
+    let name = document.getElementById('name').value.trim();
+    let phone = document.getElementById('phone').value.trim();
+    let city = document.getElementById('city').value.trim();
+    let address = document.getElementById('address').value.trim();
+    let btn = document.getElementById('submit-btn');
+
+    if(!name || !phone || !city || !address){
+        toast('⚠️ عافاك عمر جميع المعلومات المطلوبة');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = '⏳ جاري إرسال الطلب...';
+
+    let totalAmount = selected === 2 ? '550.00 DH' : '300.00 DH';
+    let qtyText = selected === 2 ? 'طقمين (2)' : 'طقم واحد (1)';
+
+    let orderData = {
+        customer_name: name,
+        customer_phone: phone,
+        customer_address: `${city} - ${address}`,
+        customer_email: 'غير محدد',
+        customer_note: `الكمية المختارة: ${qtyText}`,
+        order_details: `طقم منظمات التوابل (الكمية: ${qtyText})`,
+        order_total: totalAmount
+    };
+
+    try {
+        emailjs.init({ publicKey: EMAILJS_CONFIG.publicKey });
+        await emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templateId, orderData);
+
+        toast('✅ تم تسجيل الطلب بنجاح! سنتصل بك قريباً لتأكيده.');
+        document.getElementById('name').value = '';
+        document.getElementById('phone').value = '';
+        document.getElementById('city').value = '';
+        document.getElementById('address').value = '';
+    } catch (error) {
+        console.error("EmailJS Error:", error);
+        toast('❌ حدث خطأ أثناء إرسال الطلب. يرجى المراهنة لاحقاً أو المحاولة مجدداً.');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '🛒 اطلب الآن والدفع عند الاستلام';
+    }
+}
+
+document.querySelectorAll('.q').forEach(q => q.onclick = () => {
+    let item = q.parentElement;
+    item.classList.toggle('open');
+    q.querySelector('b').textContent = item.classList.contains('open') ? '−' : '+';
+});
+</script>
+</body>
+</html>
