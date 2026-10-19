@@ -117,7 +117,10 @@ async function submitOrder(event) {
         website: ""
       })
     });
-    if (!response.ok) throw new Error("تعذر إرسال الطلب. عاود المحاولة من بعد.");
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.error || `تعذر إرسال الطلب (HTTP ${response.status}). عاود المحاولة من بعد.`);
+    }
     orderMessage.textContent = "وصلنا الطلب ديالك، غادي نتاصلو بيك باش نأكدو.";
     orderMessage.classList.add("success");
     orderForm.reset();

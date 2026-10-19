@@ -176,7 +176,7 @@ async function submitCheckout(event) {
       })
     });
     const result = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(result.error || "Could not submit the order.");
+    if (!response.ok) throw new Error(result.error || `Could not submit the order (HTTP ${response.status}).`);
     localStorage.removeItem(CART_KEY);
     updateBagCount();
     $("#checkout-message").textContent = "Order received. We will call to confirm it.";
