@@ -1,0 +1,23 @@
+[
+  {
+    "id": "sac-artisanal",
+    "name": "حقيبة يد أنيقة",
+    "price": 249,
+    "image": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=720&q=80",
+    "description": "تصميم عملي وأنيق للاستعمال اليومي، بجودة مختارة."
+  },
+  {
+    "id": "bouteille-isotherme",
+    "name": "قارورة حرارية",
+    "price": 129,
+    "image": "https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=720&q=80",
+    "description": "حافظ على مشروبك بارد أو سخون معاك طول النهار."
+  },
+  {
+    "id": "lampe-design",
+    "name": "مصباح ديكور",
+    "price": 189,
+    "image": "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=720&q=80",
+    "description": "لمسة دافئة وعصرية باش تزيد الجمال لفضاءك."
+  }
+]

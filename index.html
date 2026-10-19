@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f8f4">
+  <meta name="description" content="تسوق منتجات مختارة مع التوصيل لجميع مدن المغرب والدفع عند الاستلام.">
+  <title>متجرنا | تسوق بسهولة</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+  <div class="announcement" id="announcement" hidden></div>
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="الصفحة الرئيسية">
+      <span class="brand-mark" aria-hidden="true">م</span>
+      <span id="store-name">متجرنا</span>
+    </a>
+    <a class="header-link" href="#products">تسوق المنتجات <span aria-hidden="true">←</span></a>
+  </header>
+
+  <main>
+    <section class="hero" aria-label="عروض المتجر">
+      <div class="hero-copy">
+        <p class="eyebrow">اختيارات كتستاهل</p>
+        <h1 id="hero-title">منتجات مميزة،<br>تجربة تسوق سهلة.</h1>
+        <p id="hero-description">تسوق من دارك، والتوصيل حتى لباب دارك فين ما كنتي فالمغرب.</p>
+        <a class="button button-primary hero-button" href="#products">اكتشف المنتجات</a>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <span class="hero-orbit orbit-one"></span>
+        <span class="hero-orbit orbit-two"></span>
+        <span class="hero-star">✳</span>
+        <div class="hero-badge"><span>التوصيل</span><strong>لجميع المدن</strong></div>
+      </div>
+      <div class="slider-controls" id="slider-controls" hidden>
+        <button class="slider-arrow" id="previous-slide" type="button" aria-label="الإعلان السابق">›</button>
+        <div class="slider-dots" id="slider-dots" aria-label="اختيار الإعلان"></div>
+        <button class="slider-arrow" id="next-slide" type="button" aria-label="الإعلان التالي">‹</button>
+      </div>
+    </section>
+
+    <section class="benefits" aria-label="مميزات التسوق">
+      <div><span class="benefit-icon" aria-hidden="true">↗</span><span><strong>توصيل سريع</strong><small>لكاع المدن المغربية</small></span></div>
+      <div><span class="benefit-icon" aria-hidden="true">د.م</span><span><strong>الدفع عند الاستلام</strong><small>تسوق براحة البال</small></span></div>
+      <div><span class="benefit-icon" aria-hidden="true">✓</span><span><strong>خدمة قريبة</strong><small>كنأكدو الطلب ديالك</small></span></div>
+    </section>
+
+    <section class="products-section" id="products">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">اختار اللي عجبك</p>
+          <h2>منتجاتنا</h2>
+        </div>
+        <p class="section-note">منتوجات مختارة بعناية وتوصيل حتى لعندك.</p>
+      </div>
+      <p class="status-message" id="products-status" role="status">كنوجدو المنتجات...</p>
+      <div class="products-grid" id="products-grid"></div>
+    </section>
+
+    <section class="bottom-callout">
+      <div><p class="eyebrow">باقي شي سؤال؟</p><h2>حنا هنا باش نعاونوك</h2></div>
+      <a class="button button-light" id="contact-link" href="#products">شوف المنتجات</a>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <a class="brand footer-brand" href="./"><span class="brand-mark" aria-hidden="true">م</span><span id="footer-store-name">متجرنا</span></a>
+    <p>© <span id="year"></span> جميع الحقوق محفوظة.</p>
+    <a id="footer-phone" href="#products" hidden></a>
+  </footer>
+
+  <dialog class="order-dialog" id="order-dialog" aria-labelledby="order-title">
+    <form class="order-form" id="order-form">
+      <button class="dialog-close" id="close-dialog" type="button" aria-label="إغلاق">×</button>
+      <p class="eyebrow">طلب سريع</p>
+      <h2 id="order-title">كمّل معلومات الطلب</h2>
+      <p class="selected-product" id="selected-product"></p>
+      <label for="customer-name">الاسم الكامل</label>
+      <input id="customer-name" name="name" autocomplete="name" maxlength="100" required>
+      <label for="customer-phone">رقم الهاتف</label>
+      <input id="customer-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="06 أو 07 أو +212" maxlength="13" required>
+      <label for="customer-city">المدينة</label>
+      <input id="customer-city" name="city" autocomplete="address-level2" maxlength="80" required>
+      <label class="honeypot" aria-hidden="true">خلي هاد الخانة خاوية<input name="website" tabindex="-1" autocomplete="off"></label>
+      <p class="form-message" id="order-message" role="status"></p>
+      <button class="button button-primary submit-order" id="submit-order" type="submit">صيفط الطلب</button>
+      <small class="privacy-note">غادي نستعملو معلوماتك غير باش نتاصلو بيك ونأكدو الطلب.</small>
+    </form>
+  </dialog>
+</body>
+</html>
