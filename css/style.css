@@ -32,6 +32,7 @@ button { cursor: pointer; }
 .site-header { height: 78px; display: flex; align-items: center; justify-content: space-between; }
 .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.12rem; }
 .brand-mark { display: grid; width: 37px; height: 37px; place-items: center; border-radius: 12px; background: var(--green); color: white; }
+.store-logo { width: 37px; height: 37px; object-fit: contain; border-radius: 8px; }
 .header-link { color: var(--green); font-size: .9rem; font-weight: 600; }
 .header-link span { margin-inline-start: 5px; }
 
@@ -90,6 +91,7 @@ button { cursor: pointer; }
 .product-card:hover .product-image { transform: scale(1.035); }
 .product-content { padding: 17px; }
 .product-content h3 { margin: 0; font-size: 1.05rem; }
+.product-category-label { margin: 5px 0 0; color: var(--muted); font-size: .72rem; }
 .product-description { min-height: 46px; margin: 8px 0 15px; color: var(--muted); font-size: .85rem; line-height: 1.7; }
 .product-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .price { color: var(--green); font-size: 1.1rem; font-weight: 700; white-space: nowrap; }

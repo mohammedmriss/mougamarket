@@ -21,10 +21,13 @@ function element(tag, className, text) {
 function renderProducts(products) {
   productsGrid.replaceChildren();
   products.forEach((product) => {
+    if (product.status === "draft") return;
     const card = element("article", "product-card");
     const imageWrap = element("div", "product-image-wrap");
+    const imageLink = element("a", "product-image-link");
+    imageLink.href = `product.html?id=${encodeURIComponent(product.id)}`;
     const image = element("img", "product-image");
-    image.src = product.image;
+    image.src = product.images?.[0] || product.image;
     image.alt = product.name;
     image.loading = "lazy";
     image.decoding = "async";
@@ -33,10 +36,16 @@ function renderProducts(products) {
       image.alt = "الصورة غير متوفرة";
       imageWrap.classList.add("image-unavailable");
     }, { once: true });
-    imageWrap.append(image);
+    imageLink.append(image);
+    imageWrap.append(imageLink);
 
     const content = element("div", "product-content");
-    content.append(element("h3", "", product.name));
+    const title = element("h3");
+    const titleLink = element("a", "", product.name);
+    titleLink.href = `product.html?id=${encodeURIComponent(product.id)}`;
+    title.append(titleLink);
+    content.append(title);
+    if (product.category) content.append(element("p", "product-category-label", product.category));
     content.append(element("p", "product-description", product.description));
     const footer = element("div", "product-footer");
     const price = element("span", "price");
@@ -46,6 +55,8 @@ function renderProducts(products) {
     );
     const orderButton = element("button", "button button-primary order-button", "اطلب الآن");
     orderButton.type = "button";
+    orderButton.disabled = Number(product.stock ?? 1) <= 0;
+    if (orderButton.disabled) orderButton.textContent = "غير متوفر";
     orderButton.addEventListener("click", () => openOrderDialog(product));
     footer.append(price, orderButton);
     content.append(footer);
@@ -94,15 +105,15 @@ async function submitOrder(event) {
   submitOrderButton.textContent = "كنصيفطو الطلب...";
   orderMessage.textContent = "";
   try {
-    const response = await fetch(endpoint, {
+    const response = await fetch(new URL("/orders", endpoint), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: String(formData.get("name") || "").trim(),
         phone,
         city: String(formData.get("city") || "").trim(),
-        product: activeProduct.name,
-        price: activeProduct.price,
+        items: [{ id: activeProduct.id, name: activeProduct.name, price: activeProduct.price, quantity: 1 }],
+        total: activeProduct.price,
         website: ""
       })
     });
@@ -176,10 +187,23 @@ async function initializeStore() {
     const [products, config] = await Promise.all([productsResponse.json(), configResponse.json()]);
     if (!Array.isArray(products)) throw new Error("ملف المنتجات فيه صيغة غير صحيحة.");
     storeConfig = config;
+    if (/^#[0-9a-f]{6}$/i.test(config.theme?.primary_color || "")) {
+      document.documentElement.style.setProperty("--green", config.theme.primary_color);
+    }
+    if (typeof config.theme?.font_family === "string") document.documentElement.style.fontFamily = config.theme.font_family;
     if (config.store_name) {
       document.querySelector("#store-name").textContent = config.store_name;
       document.querySelector("#footer-store-name").textContent = config.store_name;
       document.title = `${config.store_name} | تسوق بسهولة`;
+    }
+    if (config.logo_url) {
+      document.querySelectorAll(".brand-mark").forEach((mark) => {
+        const logo = document.createElement("img");
+        logo.src = config.logo_url;
+        logo.alt = "";
+        logo.className = "store-logo";
+        mark.replaceWith(logo);
+      });
     }
     const announcement = document.querySelector("#announcement");
     if (config.announcement_text) {
@@ -194,7 +218,7 @@ async function initializeStore() {
     }
     setupSlider(config);
     renderProducts(products);
-    productsStatus.textContent = products.length ? "" : "ما كايناش منتجات معروضة دابا.";
+    productsStatus.textContent = products.some((product) => product.status !== "draft") ? "" : "ما كايناش منتجات معروضة دابا.";
   } catch (error) {
     productsStatus.textContent = error.message || "وقع مشكل فتحميل المتجر.";
     productsStatus.classList.add("error");

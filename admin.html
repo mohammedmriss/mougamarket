@@ -1,78 +1,130 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
-  <meta name="theme-color" content="#f7f8f4">
-  <title>إدارة المنتجات | متجرنا</title>
+  <title>Store Admin | MougaMarket</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/admin.css">
   <script src="js/admin.js" defer></script>
 </head>
 <body class="admin-page">
-  <header class="site-header admin-header">
-    <a class="brand" href="./"><span class="brand-mark" aria-hidden="true">م</span><span>إدارة المتجر</span></a>
-    <a class="header-link" href="./">الرجوع للمتجر ←</a>
-  </header>
-  <main class="admin-main">
-    <section class="admin-intro">
-      <p class="eyebrow">لوحة خاصة بالمالك</p>
-      <h1>إدارة المنتجات</h1>
-      <p>ربط المستودع ديالك باش تزيد المنتجات أو تبدلها أو تحيدها مباشرة من GitHub.</p>
-    </section>
-
-    <section class="admin-panel connection-panel" aria-labelledby="connection-title">
-      <div class="panel-heading">
-        <div><p class="eyebrow">الخطوة الأولى</p><h2 id="connection-title">إعداد الاتصال</h2></div>
-        <span class="connection-indicator" id="connection-indicator">ما متصلش</span>
+  <div class="admin-shell">
+    <aside class="admin-sidebar">
+      <a class="admin-brand" href="./"><span class="brand-mark">M</span><span>MougaMarket</span></a>
+      <p class="sidebar-label">WORKSPACE</p>
+      <nav class="admin-nav" aria-label="Admin navigation">
+        <button class="nav-item active" data-view="dashboard" type="button"><span>◫</span>Dashboard</button>
+        <p class="sidebar-label">CATALOG</p>
+        <button class="nav-item" data-view="products" type="button"><span>▦</span>Products</button>
+        <button class="nav-subitem" data-view="products" type="button">Product List</button>
+        <button class="nav-subitem" data-view="categories" type="button">Categories</button>
+        <p class="sidebar-label">MANAGEMENT</p>
+        <button class="nav-item" data-view="orders" type="button"><span>▤</span>Sales / Orders</button>
+        <button class="nav-item" data-view="analytics" type="button"><span>⌁</span>Analytics</button>
+        <p class="sidebar-label">PREFERENCES</p>
+        <button class="nav-item" data-view="settings" type="button"><span>⚙</span>Settings</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <a href="./">← View storefront</a>
+        <small>Static store · GitHub Pages</small>
       </div>
-      <form id="connection-form" class="connection-form">
-        <label for="repository">اسم المستودع (owner/repo)</label>
-        <input id="repository" name="repository" placeholder="username/my-shop" autocomplete="url" required>
-        <label for="branch">اسم الفرع</label>
-        <input id="branch" name="branch" value="main" autocomplete="off" required>
-        <label for="github-token">GitHub Personal Access Token</label>
-        <input id="github-token" name="token" type="password" autocomplete="off" required>
-        <p class="security-note">التوكن كيبقى غير فذاكرة هاد التبويب، وما كيتخزنش. استعمل Fine-grained token بصلاحية Contents: Read and write للمستودع المطلوب فقط.</p>
-        <button class="button button-primary" id="connect-button" type="submit">اتصل بالمستودع</button>
-      </form>
-      <p class="admin-message" id="connection-message" role="status"></p>
-    </section>
+    </aside>
 
-    <section class="admin-workspace" id="admin-workspace" hidden>
-      <section class="admin-panel product-list-panel">
-        <div class="panel-heading">
-          <div><p class="eyebrow">المخزون</p><h2>المنتجات الحالية</h2></div>
-          <button class="button button-primary add-product-button" id="new-product" type="button">+ منتج جديد</button>
-        </div>
-        <p class="admin-message" id="products-message" role="status"></p>
-        <div class="admin-products" id="admin-products"></div>
-      </section>
+    <main class="admin-main">
+      <header class="admin-topbar">
+        <button class="mobile-menu" id="mobile-menu" type="button" aria-label="Toggle menu">☰</button>
+        <div><span class="topbar-kicker">STORE MANAGEMENT</span><h1 id="view-title">Dashboard</h1></div>
+        <span class="connection-indicator" id="connection-indicator">Not connected</span>
+      </header>
 
-      <section class="admin-panel editor-panel" id="editor-panel">
-        <div class="panel-heading">
-          <div><p class="eyebrow">بيانات المنتج</p><h2 id="editor-title">إضافة منتج</h2></div>
-        </div>
-        <form id="product-form" class="product-form">
-          <input type="hidden" id="product-id" name="id">
-          <label for="product-name">اسم المنتج</label>
-          <input id="product-name" name="name" maxlength="100" required>
-          <label for="product-price">الثمن بالدرهم</label>
-          <input id="product-price" name="price" type="number" min="0.01" step="0.01" required>
-          <label for="product-image">رابط الصورة</label>
-          <input id="product-image" name="image" type="url" placeholder="https://..." required>
-          <label for="product-description">الوصف</label>
-          <textarea id="product-description" name="description" rows="4" maxlength="500" required></textarea>
-          <div class="editor-actions">
-            <button class="button button-primary" id="save-product" type="submit">حفظ في GitHub</button>
-            <button class="button button-secondary" id="cancel-edit" type="button">مسح الحقول</button>
-          </div>
-          <p class="admin-message" id="editor-message" role="status"></p>
+      <section class="admin-panel connection-panel" id="connection-panel" aria-labelledby="connection-title">
+        <div class="panel-heading"><div><span class="section-kicker">FIRST STEP</span><h2 id="connection-title">Connect your services</h2></div></div>
+        <form id="connection-form" class="connection-form">
+          <label>GitHub repository <input id="repository" name="repository" placeholder="owner/repository" autocomplete="url" required></label>
+          <label>Branch <input id="branch" name="branch" value="main" required></label>
+          <label>GitHub fine-grained token <input id="github-token" name="token" type="password" autocomplete="off" required></label>
+          <label>Worker endpoint <input id="worker-endpoint" name="endpoint" type="url" placeholder="https://orders.example.workers.dev" required></label>
+          <label>Admin API key <input id="admin-key" name="adminKey" type="password" autocomplete="off" required></label>
+          <button class="button button-primary" id="connect-button" type="submit">Connect</button>
+          <p class="security-note">Tokens stay in this tab's memory only. Use a fine-grained token limited to this repository with Contents read/write.</p>
         </form>
+        <p class="admin-message" id="connection-message" role="status"></p>
       </section>
-    </section>
-  </main>
-  <footer class="site-footer admin-footer"><p>التغييرات كتتحفظ في data/products.json عبر GitHub API.</p></footer>
+
+      <div class="admin-workspace" id="admin-workspace" hidden>
+        <section class="admin-view active" data-panel="dashboard">
+          <div class="welcome-row"><div><span class="section-kicker">STORE OVERVIEW</span><h2>Good morning 👋</h2><p>Your store at a glance.</p></div><button class="button button-primary" data-open-view="products" type="button">＋ Add product</button></div>
+          <div class="stats-grid">
+            <article class="stat-card"><span>Total products</span><strong id="stat-products">0</strong><small>In your catalog</small></article>
+            <article class="stat-card"><span>Active products</span><strong id="stat-active">0</strong><small>Visible in store</small></article>
+            <article class="stat-card"><span>Total orders</span><strong id="stat-orders">0</strong><small>Recorded in Sheets</small></article>
+            <article class="stat-card"><span>Sales total</span><strong id="stat-sales">0 MAD</strong><small>From recorded orders</small></article>
+          </div>
+          <section class="admin-panel embedded-panel"><div class="panel-heading"><div><span class="section-kicker">LATEST ACTIVITY</span><h2>Recent orders</h2></div><button class="text-button" data-open-view="orders" type="button">View all →</button></div><div class="table-scroll"><table><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th></tr></thead><tbody id="recent-orders"></tbody></table></div></section>
+        </section>
+
+        <section class="admin-view" data-panel="products">
+          <div class="view-heading"><div><span class="section-kicker">CATALOG</span><h2>Product list</h2><p>Manage your inventory and product visibility.</p></div><button class="button button-primary" id="new-product" type="button">＋ Add product</button></div>
+          <section class="admin-panel"><div class="table-toolbar"><label class="search-field">⌕ <input id="product-search" type="search" placeholder="Search products"></label><label class="filter-label">Category <select id="product-category-filter"><option value="">All categories</option></select></label></div><p class="admin-message" id="products-message" role="status"></p><div class="table-scroll"><table><thead><tr><th>PRODUCT</th><th>CATEGORY</th><th>PRICE</th><th>STOCK</th><th>STATUS</th><th>ACTIONS</th></tr></thead><tbody id="products-table"></tbody></table></div><div class="pagination"><span id="pagination-summary"></span><div><button id="page-previous" type="button" aria-label="Previous page">←</button><span id="page-number"></span><button id="page-next" type="button" aria-label="Next page">→</button></div></div></section>
+        </section>
+
+        <section class="admin-view" data-panel="categories">
+          <div class="view-heading"><div><span class="section-kicker">PRODUCT ORGANIZATION</span><h2>Categories</h2><p>Categories are generated from your products.</p></div></div>
+          <section class="admin-panel"><div class="category-grid" id="categories-grid"></div><p class="admin-message" id="categories-message" role="status"></p></section>
+        </section>
+
+        <section class="admin-view" data-panel="orders">
+          <div class="view-heading"><div><span class="section-kicker">SALES MANAGEMENT</span><h2>Orders</h2><p>Orders are stored in your connected Google Sheet.</p></div><button class="button button-secondary" id="refresh-orders" type="button">↻ Refresh</button></div>
+          <section class="admin-panel"><div class="table-toolbar"><label class="filter-label">Status <select id="order-status-filter"><option value="">All orders</option><option value="new">New</option><option value="confirmed">Confirmed</option><option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option></select></label></div><p class="admin-message" id="orders-message" role="status"></p><div class="table-scroll"><table><thead><tr><th>ORDER</th><th>CUSTOMER</th><th>PHONE / CITY</th><th>ITEMS</th><th>TOTAL</th><th>STATUS</th><th>UPDATE</th></tr></thead><tbody id="orders-table"></tbody></table></div></section>
+        </section>
+
+        <section class="admin-view" data-panel="analytics">
+          <div class="view-heading"><div><span class="section-kicker">PERFORMANCE</span><h2>Analytics</h2><p>Summary calculated from orders in Google Sheets.</p></div></div>
+          <div class="stats-grid analytics-stats"><article class="stat-card"><span>Orders</span><strong id="analytics-orders">0</strong></article><article class="stat-card"><span>Revenue</span><strong id="analytics-revenue">0 MAD</strong></article><article class="stat-card"><span>Average order</span><strong id="analytics-average">0 MAD</strong></article><article class="stat-card"><span>Pending</span><strong id="analytics-pending">0</strong></article></div>
+          <section class="admin-panel"><div class="panel-heading"><div><span class="section-kicker">TOP PRODUCTS</span><h2>Best sellers</h2></div></div><div id="best-sellers" class="best-sellers"></div></section>
+        </section>
+
+        <section class="admin-view" data-panel="settings">
+          <div class="view-heading"><div><span class="section-kicker">STORE CUSTOMIZATION</span><h2>Settings</h2><p>Changes are written to data/config.json in your repository.</p></div></div>
+          <form class="admin-panel settings-form" id="settings-form">
+            <div class="settings-grid">
+              <label>Store name<input name="store_name" id="setting-store-name" maxlength="80" required></label>
+              <label>Announcement<input name="announcement_text" id="setting-announcement" maxlength="180"></label>
+              <label>Primary color<input name="primary_color" id="setting-primary-color" type="color" value="#176b4b"></label>
+              <label>Font family<input name="font_family" id="setting-font" maxlength="100" placeholder="system-ui, sans-serif"></label>
+              <label>Logo URL<input name="logo_url" id="setting-logo" type="url" placeholder="https://..."></label>
+              <label>Store phone<input name="store_phone" id="setting-phone" type="tel"></label>
+            </div>
+            <label>Slider slides (JSON array: image, title, description)<textarea id="setting-slides" rows="8" spellcheck="false"></textarea></label>
+            <p class="admin-message" id="settings-message" role="status"></p>
+            <button class="button button-primary" id="save-settings" type="submit">Save settings to GitHub</button>
+          </form>
+        </section>
+
+        <section class="admin-panel product-editor" id="product-editor" hidden>
+          <div class="panel-heading"><div><span class="section-kicker">PRODUCT DETAILS</span><h2 id="editor-title">Add product</h2></div><button class="icon-button" id="close-editor" type="button" aria-label="Close">×</button></div>
+          <form id="product-form" class="product-form">
+            <input type="hidden" id="product-id">
+            <div class="settings-grid">
+              <label>Name<input id="product-name" maxlength="100" required></label>
+              <label>Category<input id="product-category" maxlength="60" required></label>
+              <label>Price (MAD)<input id="product-price" type="number" min="0.01" step="0.01" required></label>
+              <label>Stock<input id="product-stock" type="number" min="0" step="1" required></label>
+              <label>Status<select id="product-status"><option value="active">Active</option><option value="draft">Draft</option></select></label>
+              <label>Badge<input id="product-badge" maxlength="60" placeholder="Highly Rated"></label>
+              <label>Sizes, comma separated<input id="product-sizes" placeholder="S, M, L"></label>
+              <label>Colors, comma separated<input id="product-colors" placeholder="Black, Sand"></label>
+              <label class="wide-field">Image URLs, one per line<textarea id="product-images" rows="4" required></textarea></label>
+              <label class="wide-field">Description<textarea id="product-description" rows="4" maxlength="1000" required></textarea></label>
+            </div>
+            <p class="admin-message" id="editor-message" role="status"></p>
+            <div class="editor-actions"><button class="button button-primary" id="save-product" type="submit">Save product</button><button class="button button-secondary" id="cancel-edit" type="button">Cancel</button></div>
+          </form>
+        </section>
+      </div>
+    </main>
+  </div>
 </body>
 </html>

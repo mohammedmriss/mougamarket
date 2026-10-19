@@ -1,40 +1,46 @@
-const connectionForm = document.querySelector("#connection-form");
-const connectionMessage = document.querySelector("#connection-message");
-const productsMessage = document.querySelector("#products-message");
-const editorMessage = document.querySelector("#editor-message");
-const adminWorkspace = document.querySelector("#admin-workspace");
-const adminProducts = document.querySelector("#admin-products");
-const productForm = document.querySelector("#product-form");
-
+const $ = (selector) => document.querySelector(selector);
+const connectionForm = $("#connection-form");
+const workspace = $("#admin-workspace");
+const views = [...document.querySelectorAll(".admin-view")];
+const productForm = $("#product-form");
+const editor = $("#product-editor");
 const PRODUCTS_PATH = "data/products.json";
+const CONFIG_PATH = "data/config.json";
 const API_ROOT = "https://api.github.com";
+const PAGE_SIZE = 8;
+
 let githubToken = "";
 let repository = "";
 let branch = "main";
+let workerEndpoint = "";
+let adminKey = "";
 let products = [];
-let fileSha = "";
+let config = {};
+let orders = [];
+let fileShas = {};
+let currentPage = 1;
+let activeView = "dashboard";
 
-function setMessage(target, text, type = "") {
+function message(target, text, type = "") {
   target.textContent = text;
   target.className = `admin-message${type ? ` ${type}` : ""}`;
 }
 
-function encodeBase64Utf8(value) {
-  const bytes = new TextEncoder().encode(value);
+function encodeBase64(text) {
+  const bytes = new TextEncoder().encode(text);
   let binary = "";
   bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
   return btoa(binary);
 }
 
-function decodeBase64Utf8(value) {
-  const binary = atob(value.replace(/\s/g, ""));
-  const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+function decodeBase64(text) {
+  const bytes = Uint8Array.from(atob(text.replace(/\s/g, "")), (char) => char.charCodeAt(0));
   return new TextDecoder().decode(bytes);
 }
 
-function fileUrl() {
+function githubFileUrl(path) {
   const [owner, repo] = repository.split("/");
-  return `${API_ROOT}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${PRODUCTS_PATH}`;
+  return `${API_ROOT}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${path}`;
 }
 
 async function githubRequest(url, options = {}) {
@@ -44,224 +50,501 @@ async function githubRequest(url, options = {}) {
       Accept: "application/vnd.github+json",
       Authorization: `Bearer ${githubToken}`,
       "X-GitHub-Api-Version": "2022-11-28",
-      ...(options.headers || {})
+      ...options.headers
     }
   });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    if (response.status === 401 || response.status === 403) {
-      throw new Error("GitHub رفض الاتصال. تحقق من التوكن والصلاحيات واسم الفرع.");
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message || `GitHub API error (${response.status}).`);
+  return body;
+}
+
+async function readGitHubFile(path) {
+  const file = await githubRequest(`${githubFileUrl(path)}?ref=${encodeURIComponent(branch)}`);
+  if (file.encoding !== "base64" || !file.content) throw new Error(`Could not read ${path} from GitHub.`);
+  fileShas[path] = file.sha;
+  return JSON.parse(decodeBase64(file.content));
+}
+
+async function saveGitHubFile(path, value, summary) {
+  const saved = await githubRequest(githubFileUrl(path), {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      message: summary,
+      content: encodeBase64(`${JSON.stringify(value, null, 2)}\n`),
+      sha: fileShas[path],
+      branch
+    })
+  });
+  if (!saved.content?.sha) throw new Error(`GitHub did not confirm saving ${path}.`);
+  fileShas[path] = saved.content.sha;
+}
+
+function workerUrl(path) {
+  return new URL(path, workerEndpoint).toString();
+}
+
+async function workerRequest(path, options = {}) {
+  const response = await fetch(workerUrl(path), {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      "X-Admin-Key": adminKey,
+      ...options.headers
     }
-    if (response.status === 404) throw new Error("ما لقيناش المستودع أو الملف. تأكد من owner/repo والفرع.");
-    throw new Error(payload.message || `فشل طلب GitHub (HTTP ${response.status}).`);
-  }
-  return payload;
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.error || `Order service error (${response.status}).`);
+  return body;
 }
 
-async function readProducts() {
-  const url = `${fileUrl()}?ref=${encodeURIComponent(branch)}`;
-  const file = await githubRequest(url);
-  if (file.encoding !== "base64" || typeof file.content !== "string") {
-    throw new Error("GitHub رجع صيغة ملف غير متوقعة.");
-  }
-  const parsed = JSON.parse(decodeBase64Utf8(file.content));
-  if (!Array.isArray(parsed)) throw new Error("data/products.json خاصو يكون لائحة منتجات.");
-  fileSha = file.sha;
-  return parsed;
+function navigate(viewName) {
+  activeView = viewName;
+  if (viewName !== "products") editor.hidden = true;
+  views.forEach((view) => view.classList.toggle("active", view.dataset.panel === viewName));
+  document.querySelectorAll("[data-view]").forEach((button) => button.classList.toggle("active", button.dataset.view === viewName));
+  const titles = { dashboard: "Dashboard", products: "Product List", categories: "Categories", orders: "Sales / Orders", analytics: "Analytics", settings: "Settings" };
+  $("#view-title").textContent = titles[viewName] || "Dashboard";
+  if (viewName === "orders" || viewName === "dashboard" || viewName === "analytics") refreshOrders();
+  if (viewName === "categories") renderCategories();
+  if (viewName === "settings") fillSettings();
+  $("#admin-workspace").scrollIntoView({ block: "start", behavior: "smooth" });
+  $(".admin-shell").classList.remove("menu-open");
 }
 
-function renderAdminProducts() {
-  adminProducts.replaceChildren();
-  products.forEach((product) => {
-    const row = document.createElement("article");
-    row.className = "admin-product";
+function normalizedProduct(product) {
+  const images = Array.isArray(product.images) ? product.images : [product.image].filter(Boolean);
+  return {
+    ...product,
+    category: String(product.category || "Uncategorized"),
+    stock: Number.isInteger(product.stock) ? product.stock : 0,
+    status: product.status === "draft" ? "draft" : "active",
+    images,
+    image: images[0] || product.image || "",
+    sizes: Array.isArray(product.sizes) ? product.sizes : [],
+    colors: Array.isArray(product.colors) ? product.colors : []
+  };
+}
+
+function renderProducts() {
+  const tbody = $("#products-table");
+  tbody.replaceChildren();
+  const query = $("#product-search").value.trim().toLocaleLowerCase();
+  const category = $("#product-category-filter").value;
+  const filtered = products.map(normalizedProduct).filter((product) =>
+    (!query || `${product.name} ${product.category}`.toLocaleLowerCase().includes(query)) &&
+    (!category || product.category === category)
+  );
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  currentPage = Math.min(currentPage, pageCount);
+  const start = (currentPage - 1) * PAGE_SIZE;
+  filtered.slice(start, start + PAGE_SIZE).forEach((product) => {
+    const row = document.createElement("tr");
+    const nameCell = document.createElement("td");
+    const productInfo = document.createElement("div");
+    productInfo.className = "table-product";
     const image = document.createElement("img");
     image.src = product.image;
     image.alt = "";
     image.loading = "lazy";
     image.addEventListener("error", () => image.removeAttribute("src"), { once: true });
-    const details = document.createElement("div");
-    const name = document.createElement("h3");
+    const info = document.createElement("div");
+    const name = document.createElement("strong");
     name.textContent = product.name;
-    const price = document.createElement("p");
-    price.textContent = `${new Intl.NumberFormat("fr-MA").format(product.price)} درهم`;
-    details.append(name, price);
-    const actions = document.createElement("div");
-    actions.className = "admin-product-actions";
-    const edit = document.createElement("button");
-    edit.type = "button";
-    edit.textContent = "تعديل";
-    edit.addEventListener("click", () => editProduct(product.id));
-    const remove = document.createElement("button");
-    remove.type = "button";
-    remove.className = "delete-product";
-    remove.textContent = "حذف";
-    remove.addEventListener("click", () => deleteProduct(product.id));
-    actions.append(edit, remove);
-    row.append(image, details, actions);
-    adminProducts.append(row);
+    const id = document.createElement("small");
+    id.textContent = product.id;
+    info.append(name, id);
+    productInfo.append(image, info);
+    nameCell.append(productInfo);
+    row.append(nameCell, cell(product.category), cell(`${product.price} MAD`), cell(String(product.stock)));
+    const statusCell = document.createElement("td");
+    const badge = document.createElement("span");
+    badge.className = `status-badge ${product.status}`;
+    badge.textContent = product.status === "active" ? "Active" : "Draft";
+    statusCell.append(badge);
+    row.append(statusCell);
+    const actions = document.createElement("td");
+    const actionGroup = document.createElement("div");
+    actionGroup.className = "row-actions";
+    const edit = button("Edit", () => editProduct(product.id));
+    const remove = button("Delete", () => deleteProduct(product.id), "delete-action");
+    actionGroup.append(edit, remove);
+    actions.append(actionGroup);
+    row.append(actions);
+    tbody.append(row);
   });
-  if (!products.length) {
-    const empty = document.createElement("p");
-    empty.className = "admin-message";
-    empty.textContent = "مازال ما كاين حتى منتج. زيد أول منتج ديالك.";
-    adminProducts.append(empty);
-  }
+  if (!filtered.length) tbody.append(emptyRow(6, "No products match your search."));
+  $("#pagination-summary").textContent = filtered.length ? `Showing ${start + 1}–${Math.min(start + PAGE_SIZE, filtered.length)} of ${filtered.length}` : "No products";
+  $("#page-number").textContent = `${currentPage} / ${pageCount}`;
+  $("#page-previous").disabled = currentPage <= 1;
+  $("#page-next").disabled = currentPage >= pageCount;
+  updateCategoryFilter();
+  updateProductStats();
 }
 
-async function refreshProducts() {
-  setMessage(productsMessage, "كنقراو المنتجات من GitHub...");
-  try {
-    products = await readProducts();
-    renderAdminProducts();
-    setMessage(productsMessage, `لقينا ${products.length} منتجات.`, "success");
-  } catch (error) {
-    setMessage(productsMessage, error.message, "error");
-    throw error;
-  }
+function cell(text) {
+  const td = document.createElement("td");
+  td.textContent = text;
+  return td;
 }
 
-function resetEditor() {
-  productForm.reset();
-  document.querySelector("#product-id").value = "";
-  document.querySelector("#editor-title").textContent = "إضافة منتج";
-  setMessage(editorMessage, "");
+function button(text, action, className = "") {
+  const item = document.createElement("button");
+  item.type = "button";
+  item.textContent = text;
+  item.className = className;
+  item.addEventListener("click", action);
+  return item;
+}
+
+function emptyRow(span, text) {
+  const row = document.createElement("tr");
+  const td = cell(text);
+  td.colSpan = span;
+  row.append(td);
+  return row;
+}
+
+function updateCategoryFilter() {
+  const filter = $("#product-category-filter");
+  const current = filter.value;
+  const categories = [...new Set(products.map((item) => normalizedProduct(item).category))].sort();
+  filter.replaceChildren(new Option("All categories", ""), ...categories.map((name) => new Option(name, name)));
+  filter.value = categories.includes(current) ? current : "";
+}
+
+function updateProductStats() {
+  $("#stat-products").textContent = String(products.length);
+  $("#stat-active").textContent = String(products.filter((p) => normalizedProduct(p).status === "active").length);
+}
+
+function renderCategories() {
+  const categoryMap = new Map();
+  products.forEach((item) => {
+    const product = normalizedProduct(item);
+    categoryMap.set(product.category, (categoryMap.get(product.category) || 0) + 1);
+  });
+  const grid = $("#categories-grid");
+  grid.replaceChildren();
+  [...categoryMap.entries()].sort(([a], [b]) => a.localeCompare(b)).forEach(([name, count]) => {
+    const card = document.createElement("article");
+    card.className = "category-card";
+    const heading = document.createElement("strong");
+    heading.textContent = name;
+    const total = document.createElement("span");
+    total.textContent = `${count} product${count === 1 ? "" : "s"}`;
+    card.append(heading, total);
+    grid.append(card);
+  });
+  if (!categoryMap.size) message($("#categories-message"), "Categories appear when you add products.");
+  else message($("#categories-message"), "");
 }
 
 function editProduct(id) {
-  const product = products.find((item) => item.id === id);
-  if (!product) {
-    setMessage(editorMessage, "ما لقيناش هاد المنتج فاللائحة.", "error");
-    return;
-  }
-  document.querySelector("#product-id").value = product.id;
-  document.querySelector("#product-name").value = product.name;
-  document.querySelector("#product-price").value = product.price;
-  document.querySelector("#product-image").value = product.image;
-  document.querySelector("#product-description").value = product.description;
-  document.querySelector("#editor-title").textContent = "تعديل منتج";
-  setMessage(editorMessage, "");
-  document.querySelector("#editor-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+  const source = products.find((item) => item.id === id);
+  if (!source) return;
+  const product = normalizedProduct(source);
+  $("#product-id").value = product.id;
+  $("#product-name").value = product.name;
+  $("#product-category").value = product.category;
+  $("#product-price").value = product.price;
+  $("#product-stock").value = product.stock;
+  $("#product-status").value = product.status;
+  $("#product-badge").value = product.badge || "";
+  $("#product-sizes").value = product.sizes.join(", ");
+  $("#product-colors").value = product.colors.join(", ");
+  $("#product-images").value = product.images.join("\n");
+  $("#product-description").value = product.description || "";
+  $("#editor-title").textContent = "Edit product";
+  editor.hidden = false;
+  editor.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-async function saveProducts(commitMessage) {
-  const payload = {
-    message: commitMessage,
-    content: encodeBase64Utf8(`${JSON.stringify(products, null, 2)}\n`),
-    sha: fileSha,
-    branch
-  };
-  const saved = await githubRequest(fileUrl(), {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
-  if (!saved.content || !saved.content.sha) {
-    throw new Error("ما وصلناش تأكيد من GitHub بأن الملف تحفظ.");
-  }
-  fileSha = saved.content.sha;
+function resetProductForm() {
+  productForm.reset();
+  $("#product-id").value = "";
+  $("#editor-title").textContent = "Add product";
+  message($("#editor-message"), "");
+}
+
+function openNewProduct() {
+  resetProductForm();
+  editor.hidden = false;
+  editor.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 async function deleteProduct(id) {
   const product = products.find((item) => item.id === id);
-  if (!product || !window.confirm(`واش متأكد بغيتي تحذف "${product.name}"؟`)) return;
-  const previousProducts = products;
+  if (!product || !window.confirm(`Delete "${product.name}" from the catalog?`)) return;
+  const previous = products;
   products = products.filter((item) => item.id !== id);
   try {
-    await saveProducts(`Delete product: ${product.name}`);
-    renderAdminProducts();
-    setMessage(productsMessage, "تحذف المنتج وتحدّث الملف في GitHub.", "success");
-    if (document.querySelector("#product-id").value === id) resetEditor();
+    await saveGitHubFile(PRODUCTS_PATH, products, `Delete product: ${product.name}`);
+    renderProducts();
+    message($("#products-message"), "Product deleted and saved to GitHub.", "success");
   } catch (error) {
-    products = previousProducts;
-    renderAdminProducts();
-    setMessage(productsMessage, error.message, "error");
+    products = previous;
+    renderProducts();
+    message($("#products-message"), error.message, "error");
+  }
+}
+
+function fillSettings() {
+  $("#setting-store-name").value = config.store_name || "";
+  $("#setting-announcement").value = config.announcement_text || "";
+  $("#setting-primary-color").value = /^#[0-9a-f]{6}$/i.test(config.theme?.primary_color || "") ? config.theme.primary_color : "#176b4b";
+  $("#setting-font").value = config.theme?.font_family || "system-ui, sans-serif";
+  $("#setting-logo").value = config.logo_url || "";
+  $("#setting-phone").value = config.store_phone || "";
+  $("#setting-slides").value = JSON.stringify(config.slider_images || [], null, 2);
+}
+
+function renderOrders() {
+  const statusFilter = $("#order-status-filter").value;
+  const filtered = orders.filter((order) => !statusFilter || order.status === statusFilter);
+  const tbody = $("#orders-table");
+  tbody.replaceChildren();
+  filtered.forEach((order) => {
+    const row = document.createElement("tr");
+    row.append(cell(order.id || ""), cell(order.name || ""), cell(`${order.phone || ""} / ${order.city || ""}`), cell(order.itemsSummary || order.product || ""), cell(`${order.total || order.price || 0} MAD`));
+    const status = document.createElement("td");
+    const badge = document.createElement("span");
+    badge.className = `status-badge ${order.status || "new"}`;
+    badge.textContent = order.status || "new";
+    status.append(badge);
+    row.append(status);
+    const updateCell = document.createElement("td");
+    const select = document.createElement("select");
+    select.className = "order-status-select";
+    ["new", "confirmed", "shipped", "delivered", "cancelled"].forEach((value) => select.add(new Option(value, value)));
+    select.value = order.status || "new";
+    select.addEventListener("change", () => updateOrderStatus(order.id, select.value, select));
+    updateCell.append(select);
+    row.append(updateCell);
+    tbody.append(row);
+  });
+  if (!filtered.length) tbody.append(emptyRow(7, "No orders yet."));
+  renderDashboardOrders();
+  renderAnalytics();
+}
+
+async function refreshOrders() {
+  if (!workerEndpoint || !adminKey) return;
+  message($("#orders-message"), "Loading orders...");
+  try {
+    const result = await workerRequest("/admin/orders");
+    orders = Array.isArray(result.orders) ? result.orders : [];
+    renderOrders();
+    message($("#orders-message"), `${orders.length} orders loaded.`, "success");
+  } catch (error) {
+    message($("#orders-message"), error.message, "error");
+  }
+}
+
+function renderDashboardOrders() {
+  const tbody = $("#recent-orders");
+  tbody.replaceChildren();
+  orders.slice(0, 5).forEach((order) => {
+    const row = document.createElement("tr");
+    row.append(cell(order.id || ""), cell(order.name || ""), cell(order.itemsSummary || order.product || ""), cell(`${order.total || order.price || 0} MAD`));
+    const statusCell = document.createElement("td");
+    const badge = document.createElement("span");
+    badge.className = `status-badge ${order.status || "new"}`;
+    badge.textContent = order.status || "new";
+    statusCell.append(badge);
+    row.append(statusCell);
+    tbody.append(row);
+  });
+  if (!orders.length) tbody.append(emptyRow(5, "No orders yet."));
+}
+
+function renderAnalytics() {
+  const completedOrders = orders.filter((order) => order.status !== "cancelled");
+  const revenue = completedOrders.reduce((sum, order) => sum + Number(order.total || order.price || 0), 0);
+  $("#stat-orders").textContent = String(orders.length);
+  $("#stat-sales").textContent = `${revenue.toFixed(2)} MAD`;
+  $("#analytics-orders").textContent = String(orders.length);
+  $("#analytics-revenue").textContent = `${revenue.toFixed(2)} MAD`;
+  $("#analytics-average").textContent = `${(completedOrders.length ? revenue / completedOrders.length : 0).toFixed(2)} MAD`;
+  $("#analytics-pending").textContent = String(orders.filter((order) => ["new", "confirmed"].includes(order.status)).length);
+  const sold = new Map();
+  orders.filter((order) => order.status !== "cancelled").forEach((order) => {
+    (order.items || []).forEach((item) => sold.set(item.name, (sold.get(item.name) || 0) + Number(item.quantity || 1)));
+  });
+  const list = $("#best-sellers");
+  list.replaceChildren();
+  [...sold.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).forEach(([name, count]) => {
+    const row = document.createElement("div");
+    row.className = "best-seller-row";
+    const productName = document.createElement("span");
+    productName.textContent = name;
+    const units = document.createElement("span");
+    units.textContent = `${count} sold`;
+    row.append(productName, units);
+    list.append(row);
+  });
+  if (!sold.size) list.textContent = "Sales data will appear after orders arrive.";
+}
+
+async function updateOrderStatus(orderId, status, select) {
+  select.disabled = true;
+  try {
+    await workerRequest("/admin/orders", { method: "PATCH", body: JSON.stringify({ orderId, status }) });
+    const order = orders.find((item) => item.id === orderId);
+    if (order) order.status = status;
+    renderOrders();
+    message($("#orders-message"), "Order status updated.", "success");
+  } catch (error) {
+    select.value = orders.find((item) => item.id === orderId)?.status || "new";
+    message($("#orders-message"), error.message, "error");
+  } finally {
+    select.disabled = false;
   }
 }
 
 connectionForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const formData = new FormData(connectionForm);
-  const newRepository = String(formData.get("repository") || "").trim();
-  const newBranch = String(formData.get("branch") || "").trim();
-  const newToken = String(formData.get("token") || "").trim();
-  document.querySelector("#github-token").value = "";
-  if (!/^[^/\s]+\/[^/\s]+$/.test(newRepository)) {
-    setMessage(connectionMessage, "كتب اسم المستودع بهاد الشكل: username/repository.", "error");
+  const repoValue = $("#repository").value.trim();
+  if (!/^[^/\s]+\/[^/\s]+$/.test(repoValue)) {
+    message($("#connection-message"), "Use the owner/repository format.", "error");
     return;
   }
-  if (!newBranch || !newToken) {
-    setMessage(connectionMessage, "دخل الفرع والتوكن ديال GitHub.", "error");
-    return;
-  }
-  repository = newRepository;
-  branch = newBranch;
-  githubToken = newToken;
-  document.querySelector("#connect-button").disabled = true;
-  setMessage(connectionMessage, "كنتحققو من الاتصال...");
+  repository = repoValue;
+  branch = $("#branch").value.trim();
+  githubToken = $("#github-token").value.trim();
+  workerEndpoint = $("#worker-endpoint").value.trim();
+  adminKey = $("#admin-key").value.trim();
+  $("#github-token").value = "";
+  $("#admin-key").value = "";
+  $("#connect-button").disabled = true;
+  message($("#connection-message"), "Connecting to GitHub and the orders service...");
   try {
-    await refreshProducts();
-    adminWorkspace.hidden = false;
-    document.querySelector("#connection-indicator").textContent = "متصل";
-    document.querySelector("#connection-indicator").classList.add("connected");
-    setMessage(connectionMessage, "الاتصال خدام. التوكن ما غاديش يتخزن من بعد ما تسد هاد التبويب.", "success");
+    const [loadedProducts, loadedConfig, loadedOrders] = await Promise.all([
+      readGitHubFile(PRODUCTS_PATH),
+      readGitHubFile(CONFIG_PATH),
+      workerRequest("/admin/orders")
+    ]);
+    if (!Array.isArray(loadedProducts) || !loadedConfig || typeof loadedConfig !== "object") throw new Error("Store data has an invalid format.");
+    products = loadedProducts;
+    config = loadedConfig;
+    orders = Array.isArray(loadedOrders.orders) ? loadedOrders.orders : [];
+    workspace.hidden = false;
+    $("#connection-indicator").textContent = "Connected";
+    $("#connection-indicator").classList.add("connected");
+    $("#connection-panel").hidden = true;
+    renderProducts();
+    renderOrders();
+    message($("#connection-message"), "Connected successfully.", "success");
+    navigate("dashboard");
   } catch (error) {
     githubToken = "";
-    setMessage(connectionMessage, error.message, "error");
+    adminKey = "";
+    message($("#connection-message"), error.message, "error");
   } finally {
-    document.querySelector("#connect-button").disabled = false;
+    $("#connect-button").disabled = false;
   }
 });
 
 productForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const formData = new FormData(productForm);
-  const oldId = String(formData.get("id") || "");
-  const name = String(formData.get("name") || "").trim();
-  const image = String(formData.get("image") || "").trim();
-  const description = String(formData.get("description") || "").trim();
-  const price = Number(formData.get("price"));
-  if (!name || !description || !Number.isFinite(price) || price <= 0) {
-    setMessage(editorMessage, "راجع الاسم والوصف والثمن؛ خاص الثمن يكون أكبر من صفر.", "error");
+  const oldId = $("#product-id").value;
+  const name = $("#product-name").value.trim();
+  const category = $("#product-category").value.trim();
+  const price = Number($("#product-price").value);
+  const stock = Number($("#product-stock").value);
+  const images = $("#product-images").value.split(/\r?\n/).map((value) => value.trim()).filter(Boolean);
+  const description = $("#product-description").value.trim();
+  if (!name || !category || !description || !Number.isFinite(price) || price <= 0 || !Number.isInteger(stock) || stock < 0 || !images.length) {
+    message($("#editor-message"), "Check the required fields, price, stock and at least one image.", "error");
     return;
   }
-  try {
-    const imageUrl = new URL(image);
-    if (imageUrl.protocol !== "https:" && imageUrl.protocol !== "http:") throw new Error();
-  } catch {
-    setMessage(editorMessage, "دخل رابط صورة صحيح كيبدا بـ https:// أو http://.", "error");
+  if (images.some((value) => {
+    try { return !["https:", "http:"].includes(new URL(value).protocol); } catch { return true; }
+  })) {
+    message($("#editor-message"), "Each image must use an http:// or https:// URL.", "error");
     return;
   }
   const id = oldId || `product-${crypto.randomUUID()}`;
-  const updated = { id, name, price, image, description };
-  const duplicate = products.some((product) => product.id !== oldId && product.name === name);
-  if (duplicate) {
-    setMessage(editorMessage, "كاين منتج آخر بنفس الاسم؛ اختار اسم مختلف باش يسهل التدبير.", "error");
-    return;
-  }
-  const previousProducts = products;
-  products = oldId
-    ? products.map((product) => product.id === oldId ? updated : product)
-    : [...products, updated];
-  document.querySelector("#save-product").disabled = true;
-  setMessage(editorMessage, "كنحفظو التغيير في GitHub...");
+  const product = {
+    id, name, category, price, stock, status: $("#product-status").value,
+    badge: $("#product-badge").value.trim(),
+    sizes: $("#product-sizes").value.split(",").map((value) => value.trim()).filter(Boolean),
+    colors: $("#product-colors").value.split(",").map((value) => value.trim()).filter(Boolean),
+    images, image: images[0], description
+  };
+  const oldProducts = products;
+  products = oldId ? products.map((item) => item.id === oldId ? product : item) : [...products, product];
+  $("#save-product").disabled = true;
+  message($("#editor-message"), "Saving product to GitHub...");
   try {
-    await saveProducts(`${oldId ? "Update" : "Add"} product: ${name}`);
-    renderAdminProducts();
-    resetEditor();
-    setMessage(productsMessage, "تحفظ التغيير في GitHub. الموقع غادي يتحدث من بعد لحظات.", "success");
+    await saveGitHubFile(PRODUCTS_PATH, products, `${oldId ? "Update" : "Add"} product: ${name}`);
+    renderProducts();
+    renderCategories();
+    editor.hidden = true;
+    resetProductForm();
+    message($("#products-message"), "Product saved. GitHub Pages will update shortly.", "success");
   } catch (error) {
-    products = previousProducts;
-    renderAdminProducts();
-    setMessage(editorMessage, error.message, "error");
+    products = oldProducts;
+    renderProducts();
+    message($("#editor-message"), error.message, "error");
   } finally {
-    document.querySelector("#save-product").disabled = false;
+    $("#save-product").disabled = false;
   }
 });
 
-document.querySelector("#new-product").addEventListener("click", () => {
-  resetEditor();
-  document.querySelector("#editor-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+$("#settings-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  let slides;
+  try {
+    slides = JSON.parse($("#setting-slides").value || "[]");
+    if (!Array.isArray(slides) || slides.some((slide) => !slide || typeof slide !== "object" || Array.isArray(slide))) throw new Error();
+  } catch {
+    message($("#settings-message"), "Slides must be a valid JSON array of objects.", "error");
+    return;
+  }
+  const logo = $("#setting-logo").value.trim();
+  if (logo && !/^https?:\/\//i.test(logo)) {
+    message($("#settings-message"), "Logo URL must start with https:// or http://.", "error");
+    return;
+  }
+  const previous = config;
+  config = {
+    ...config,
+    store_name: $("#setting-store-name").value.trim(),
+    announcement_text: $("#setting-announcement").value.trim(),
+    store_phone: $("#setting-phone").value.trim(),
+    logo_url: logo,
+    theme: {
+      ...(config.theme || {}),
+      primary_color: $("#setting-primary-color").value,
+      font_family: $("#setting-font").value.trim() || "system-ui, sans-serif"
+    },
+    slider_images: slides
+  };
+  $("#save-settings").disabled = true;
+  message($("#settings-message"), "Saving settings to GitHub...");
+  try {
+    await saveGitHubFile(CONFIG_PATH, config, "Update storefront settings");
+    document.documentElement.style.setProperty("--green", config.theme.primary_color);
+    message($("#settings-message"), "Settings saved to GitHub.", "success");
+  } catch (error) {
+    config = previous;
+    message($("#settings-message"), error.message, "error");
+  } finally {
+    $("#save-settings").disabled = false;
+  }
 });
-document.querySelector("#cancel-edit").addEventListener("click", resetEditor);
-window.addEventListener("pagehide", () => { githubToken = ""; });
+
+document.querySelectorAll("[data-view]").forEach((button) => button.addEventListener("click", () => navigate(button.dataset.view)));
+document.querySelectorAll("[data-open-view]").forEach((button) => button.addEventListener("click", () => navigate(button.dataset.openView)));
+$("#new-product").addEventListener("click", openNewProduct);
+$("#close-editor").addEventListener("click", () => { editor.hidden = true; });
+$("#cancel-edit").addEventListener("click", () => { editor.hidden = true; resetProductForm(); });
+$("#product-search").addEventListener("input", () => { currentPage = 1; renderProducts(); });
+$("#product-category-filter").addEventListener("change", () => { currentPage = 1; renderProducts(); });
+$("#page-previous").addEventListener("click", () => { currentPage = Math.max(1, currentPage - 1); renderProducts(); });
+$("#page-next").addEventListener("click", () => { currentPage += 1; renderProducts(); });
+$("#order-status-filter").addEventListener("change", renderOrders);
+$("#refresh-orders").addEventListener("click", refreshOrders);
+$("#mobile-menu").addEventListener("click", () => $(".admin-shell").classList.toggle("menu-open"));
+window.addEventListener("pagehide", () => { githubToken = ""; adminKey = ""; });

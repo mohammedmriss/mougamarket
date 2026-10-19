@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f8f4">
+  <meta name="description" content="Discover product details and order from MougaMarket.">
+  <title>Product | MougaMarket</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/product.css">
+  <script src="js/product.js" defer></script>
+</head>
+<body class="product-page">
+  <div class="announcement" id="announcement" hidden></div>
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="MougaMarket home"><span class="brand-mark" aria-hidden="true">M</span><span id="store-name">MougaMarket</span></a>
+    <nav class="product-header-nav"><a href="./">Shop</a><a href="#recommendations">You might also like</a><button class="bag-button" id="bag-button" type="button">Bag <span id="bag-count">0</span></button></nav>
+  </header>
+  <main class="product-main">
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="./">Home</a><span>/</span><span id="breadcrumb-name">Product</span></nav>
+    <p class="product-status" id="product-status" role="status">Loading product...</p>
+    <section class="product-detail" id="product-detail" hidden>
+      <div class="product-gallery">
+        <div class="gallery-thumbnails" id="gallery-thumbnails" aria-label="Product images"></div>
+        <div class="gallery-feature">
+          <img id="featured-image" alt="">
+          <span class="gallery-badge" id="gallery-badge" hidden></span>
+        </div>
+      </div>
+      <section class="product-information">
+        <span class="product-category" id="detail-category"></span>
+        <span class="detail-badge" id="detail-badge" hidden></span>
+        <h1 id="detail-name"></h1>
+        <p class="detail-price" id="detail-price"></p>
+        <p class="detail-description" id="detail-description"></p>
+        <div class="variant-group" id="size-group" hidden><h2>Size</h2><div class="variant-options" id="size-options"></div></div>
+        <div class="variant-group" id="color-group" hidden><h2>Color</h2><div class="variant-options" id="color-options"></div></div>
+        <div class="detail-stock" id="detail-stock"></div>
+        <div class="purchase-actions">
+          <button class="button button-primary purchase-button" id="add-to-bag" type="button">Add to Bag</button>
+          <button class="button button-outline purchase-button" id="buy-now" type="button">Checkout / Buy Now</button>
+        </div>
+        <div class="purchase-feedback" id="purchase-feedback" role="status"></div>
+        <div class="shipping-cards">
+          <article><span aria-hidden="true">↗</span><div><strong>Delivery across Morocco</strong><p>Delivery to your door in cities across Morocco.</p></div></article>
+          <article><span aria-hidden="true">↺</span><div><strong>Easy returns</strong><p>Contact our team if there is a problem with your order.</p></div></article>
+          <article><span aria-hidden="true">د.م</span><div><strong>Cash on delivery</strong><p>Pay when your order arrives.</p></div></article>
+        </div>
+      </section>
+    </section>
+    <section class="recommendations-section" id="recommendations" hidden>
+      <div class="recommendations-heading"><div><span class="section-kicker">COMPLETE YOUR LOOK</span><h2>YOU MIGHT ALSO LIKE</h2></div><a href="./#products">Shop all →</a></div>
+      <div class="recommendation-grid" id="recommendation-grid"></div>
+    </section>
+  </main>
+  <footer class="site-footer"><a class="brand footer-brand" href="./"><span class="brand-mark">M</span><span id="footer-store-name">MougaMarket</span></a><p>© <span id="year"></span> All rights reserved.</p></footer>
+
+  <dialog class="order-dialog" id="checkout-dialog" aria-labelledby="checkout-title">
+    <form class="order-form" id="checkout-form">
+      <button class="dialog-close" id="close-checkout" type="button" aria-label="Close">×</button>
+      <p class="eyebrow">Quick checkout</p>
+      <h2 id="checkout-title">Delivery details</h2>
+      <p class="selected-product" id="checkout-summary"></p>
+      <label for="customer-name">Full name</label><input id="customer-name" name="name" autocomplete="name" maxlength="100" required>
+      <label for="customer-phone">Phone number</label><input id="customer-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="06, 07 or +212" maxlength="13" required>
+      <label for="customer-city">City</label><input id="customer-city" name="city" autocomplete="address-level2" maxlength="80" required>
+      <label class="honeypot" aria-hidden="true">Leave empty<input name="website" tabindex="-1" autocomplete="off"></label>
+      <p class="form-message" id="checkout-message" role="status"></p>
+      <button class="button button-primary submit-order" id="submit-checkout" type="submit">Place order</button>
+      <small class="privacy-note">Your details are only used to confirm and deliver your order.</small>
+    </form>
+  </dialog>
+</body>
+</html>

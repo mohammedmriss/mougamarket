@@ -1,8 +1,13 @@
 {
-  "store_name": "MougaM arket",
+  "store_name": "MougaMarket",
+  "logo_url": "",
   "announcement_text": "التوصيل لجميع المدن المغربية والدفع عند الاستلام",
   "store_phone": "",
   "order_endpoint": "",
+  "theme": {
+    "primary_color": "#176b4b",
+    "font_family": "system-ui, sans-serif"
+  },
   "slider_images": [
     {
       "image": "",

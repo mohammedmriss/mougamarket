@@ -3,6 +3,17 @@
     "id": "sac-artisanal",
     "name": "حقيبة يد أنيقة",
     "price": 249,
+    "category": "حقائب",
+    "stock": 12,
+    "status": "active",
+    "badge": "الأكثر مبيعاً",
+    "images": [
+      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1000&q=85",
+      "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=1000&q=85",
+      "https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?auto=format&fit=crop&w=1000&q=85"
+    ],
+    "sizes": [],
+    "colors": ["أسود", "بني"],
     "image": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=720&q=80",
     "description": "تصميم عملي وأنيق للاستعمال اليومي، بجودة مختارة."
   },
@@ -10,6 +21,16 @@
     "id": "bouteille-isotherme",
     "name": "قارورة حرارية",
     "price": 129,
+    "category": "إكسسوارات",
+    "stock": 25,
+    "status": "active",
+    "badge": "تقييم ممتاز",
+    "images": [
+      "https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=1000&q=85",
+      "https://images.unsplash.com/photo-1608270586620-248524c67de9?auto=format&fit=crop&w=1000&q=85"
+    ],
+    "sizes": [],
+    "colors": ["أخضر", "أبيض"],
     "image": "https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=720&q=80",
     "description": "حافظ على مشروبك بارد أو سخون معاك طول النهار."
   },
@@ -17,6 +38,16 @@
     "id": "lampe-design",
     "name": "مصباح ديكور",
     "price": 189,
+    "category": "المنزل",
+    "stock": 8,
+    "status": "active",
+    "badge": "",
+    "images": [
+      "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=1000&q=85",
+      "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=900&q=75"
+    ],
+    "sizes": [],
+    "colors": [],
     "image": "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=720&q=80",
     "description": "لمسة دافئة وعصرية باش تزيد الجمال لفضاءك."
   }
