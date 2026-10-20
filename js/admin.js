@@ -8,7 +8,6 @@ const PRODUCTS_PATH = "data/products.json";
 const CONFIG_PATH = "data/config.json";
 const API_ROOT = "https://api.github.com";
 const PAGE_SIZE = 8;
-const ACCOUNT_KEY = "mougamarket-admin-account";
 const CONNECTION_KEY = "mougamarket-admin-connection";
 const SESSION_KEY = "mougamarket-admin-session";
 
@@ -24,6 +23,8 @@ let fileShas = {};
 let currentPage = 1;
 let activeView = "dashboard";
 let signedInEmail = "";
+let adminSessionToken = "";
+let authenticatedWorkerEndpoint = "";
 
 function message(target, text, type = "") {
   target.textContent = text;
@@ -38,35 +39,46 @@ function readLocalJson(key) {
   }
 }
 
-function toHex(bytes) {
-  return [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+async function getConfiguredWorkerEndpoint() {
+  const response = await fetch("data/config.json", { cache: "no-cache" });
+  if (!response.ok) throw new Error("Could not load the admin service configuration.");
+  const settings = await response.json();
+  if (typeof settings.order_endpoint !== "string" || !settings.order_endpoint) throw new Error("The admin service endpoint is not configured.");
+  return settings.order_endpoint;
 }
 
-async function hashPassword(password, saltHex) {
-  if (!crypto.subtle) throw new Error("Use HTTPS to set up the local admin account.");
-  const salt = Uint8Array.from(saltHex.match(/.{2}/g) || [], (byte) => Number.parseInt(byte, 16));
-  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
-  const digest = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt, iterations: 150000 }, key, 256);
-  return toHex(new Uint8Array(digest));
+async function signIn(email, password) {
+  const endpoint = await getConfiguredWorkerEndpoint();
+  const response = await fetch(new URL("/admin/login", endpoint), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || !result.sessionToken) throw new Error(result.error || "Email or password is incorrect.");
+  adminSessionToken = result.sessionToken;
+  signedInEmail = result.email;
+  authenticatedWorkerEndpoint = endpoint;
+  localStorage.setItem(SESSION_KEY, JSON.stringify({
+    email: result.email,
+    token: result.sessionToken,
+    workerEndpoint: endpoint,
+    expiresAt: Date.now() + Number(result.expiresIn || 0) * 1000
+  }));
+  return result;
 }
 
-function equalStrings(left, right) {
-  if (left.length !== right.length) return false;
-  let difference = 0;
-  for (let index = 0; index < left.length; index += 1) difference |= left.charCodeAt(index) ^ right.charCodeAt(index);
-  return difference === 0;
-}
-
-async function authenticateLocal(email, password) {
-  const account = readLocalJson(ACCOUNT_KEY);
-  if (!account) {
-    const salt = toHex(crypto.getRandomValues(new Uint8Array(16)));
-    const passwordHash = await hashPassword(password, salt);
-    localStorage.setItem(ACCOUNT_KEY, JSON.stringify({ email, salt, passwordHash }));
-    return true;
-  }
-  if (String(account.email || "").toLowerCase() !== email.toLowerCase() || !account.salt || !account.passwordHash) return false;
-  return equalStrings(await hashPassword(password, account.salt), account.passwordHash);
+async function validateSession(session) {
+  if (!session?.token || !session.workerEndpoint || Number(session.expiresAt) <= Date.now()) return false;
+  const response = await fetch(new URL("/admin/session", session.workerEndpoint), {
+    headers: { Authorization: `Bearer ${session.token}` }
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || !result.email) return false;
+  adminSessionToken = session.token;
+  signedInEmail = result.email;
+  authenticatedWorkerEndpoint = session.workerEndpoint;
+  return true;
 }
 
 function showConnectionStage() {
@@ -147,6 +159,7 @@ async function workerRequest(path, options = {}) {
     headers: {
       "Content-Type": "application/json",
       "X-Admin-Key": adminKey,
+      Authorization: `Bearer ${adminSessionToken}`,
       ...options.headers
     }
   });
@@ -469,6 +482,9 @@ async function connectServices(credentials, remember = true) {
   connectButton.disabled = true;
   message($("#connection-message"), "Connecting to GitHub and the orders service...");
   try {
+    if (new URL(workerEndpoint).origin !== new URL(authenticatedWorkerEndpoint).origin) {
+      throw new Error("Use the Worker origin that issued this admin session.");
+    }
     const [loadedProducts, loadedConfig, loadedOrders] = await Promise.all([
       readGitHubFile(PRODUCTS_PATH),
       readGitHubFile(CONFIG_PATH),
@@ -480,7 +496,6 @@ async function connectServices(credentials, remember = true) {
     orders = Array.isArray(loadedOrders.orders) ? loadedOrders.orders : [];
     if (remember) {
       localStorage.setItem(CONNECTION_KEY, JSON.stringify({ repository, branch, githubToken, workerEndpoint, adminKey }));
-      localStorage.setItem(SESSION_KEY, JSON.stringify({ email: signedInEmail }));
     }
     workspace.hidden = false;
     $("#connection-indicator").textContent = "Connected";
@@ -524,16 +539,19 @@ $("#login-form").addEventListener("submit", async (event) => {
   const password = $("#login-password").value;
   const loginButton = $("#login-button");
   loginButton.disabled = true;
-  message($("#login-message"), "Checking local account...");
+  message($("#login-message"), "Verifying account...");
   try {
-    const valid = await authenticateLocal(email, password);
-    if (!valid) throw new Error("Email or password is incorrect.");
-    signedInEmail = email;
+    await signIn(email, password);
     $("#login-form").reset();
     showConnectionStage();
     message($("#connection-message"), "Sign-in complete. Connect your services to continue.");
+    const savedConnection = readLocalJson(CONNECTION_KEY);
+    if (savedConnection) {
+      fillConnectionForm(savedConnection);
+      await connectServices(savedConnection, false);
+    }
   } catch (error) {
-    message($("#login-message"), error.message || "Could not verify the local account.", "error");
+    message($("#login-message"), error.message || "Could not verify the account.", "error");
   } finally {
     loginButton.disabled = false;
   }
@@ -542,8 +560,11 @@ $("#login-form").addEventListener("submit", async (event) => {
 $("#logout-button").addEventListener("click", () => {
   localStorage.removeItem(SESSION_KEY);
   localStorage.removeItem(CONNECTION_KEY);
+  localStorage.removeItem("mougamarket-admin-account");
   githubToken = "";
   adminKey = "";
+  adminSessionToken = "";
+  authenticatedWorkerEndpoint = "";
   repository = "";
   branch = "main";
   workerEndpoint = "";
@@ -665,19 +686,25 @@ $("#page-next").addEventListener("click", () => { currentPage += 1; renderProduc
 $("#order-status-filter").addEventListener("change", renderOrders);
 $("#refresh-orders").addEventListener("click", refreshOrders);
 $("#mobile-menu").addEventListener("click", () => $(".admin-shell").classList.toggle("menu-open"));
-window.addEventListener("pagehide", () => { githubToken = ""; adminKey = ""; });
+window.addEventListener("pagehide", () => { githubToken = ""; adminKey = ""; adminSessionToken = ""; });
 
 async function initializeAdminAccess() {
-  const account = readLocalJson(ACCOUNT_KEY);
-  $("#login-title").textContent = account ? "Admin sign in" : "Set up local admin";
-  $("#login-button").textContent = account ? "Sign in" : "Create local account";
   const session = readLocalJson(SESSION_KEY);
-  const savedConnection = readLocalJson(CONNECTION_KEY);
-  if (!session?.email || !savedConnection) return;
-  signedInEmail = String(session.email).toLowerCase();
+  if (!session) return;
+  try {
+    if (!await validateSession(session)) throw new Error("Session expired.");
+  } catch {
+    localStorage.removeItem(SESSION_KEY);
+    return;
+  }
   showConnectionStage();
+  const savedConnection = readLocalJson(CONNECTION_KEY);
+  if (!savedConnection) return;
   fillConnectionForm(savedConnection);
   await connectServices(savedConnection, false);
 }
 
 initializeAdminAccess();
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted) initializeAdminAccess();
+});
