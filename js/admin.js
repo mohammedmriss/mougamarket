@@ -292,7 +292,7 @@ async function deleteProduct(id) {
 function fillSettings() {
   $("#setting-store-name").value = config.store_name || "";
   $("#setting-announcement").value = config.announcement_text || "";
-  $("#setting-primary-color").value = /^#[0-9a-f]{6}$/i.test(config.theme?.primary_color || "") ? config.theme.primary_color : "#176b4b";
+  $("#setting-primary-color").value = /^#[0-9a-f]{6}$/i.test(config.theme?.primary_color || "") ? config.theme.primary_color : "#2563eb";
   $("#setting-font").value = config.theme?.font_family || "system-ui, sans-serif";
   $("#setting-logo").value = config.logo_url || "";
   $("#setting-phone").value = config.store_phone || "";

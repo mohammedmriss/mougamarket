@@ -5,20 +5,21 @@ let config = {};
 let selectedSize = "";
 let selectedColor = "";
 let checkoutItems = [];
+let clearCartAfterCheckout = false;
 
 function formatMoney(value) {
-  return `${new Intl.NumberFormat("fr-MA", { maximumFractionDigits: 2 }).format(value)} MAD`;
+  return `${new Intl.NumberFormat("fr-MA", { maximumFractionDigits: 2 }).format(value)} درهم`;
 }
 
 function setTheme(settings) {
   if (/^#[0-9a-f]{6}$/i.test(settings.theme?.primary_color || "")) {
-    document.documentElement.style.setProperty("--green", settings.theme.primary_color);
+    document.documentElement.style.setProperty("--blue", settings.theme.primary_color);
   }
   if (typeof settings.theme?.font_family === "string") document.documentElement.style.fontFamily = settings.theme.font_family;
   if (settings.store_name) {
     $("#store-name").textContent = settings.store_name;
     $("#footer-store-name").textContent = settings.store_name;
-    document.title = `${settings.store_name} | ${product?.name || "Product"}`;
+    document.title = `${product?.name || "المنتج"} | ${settings.store_name}`;
   }
   if (settings.announcement_text) {
     $("#announcement").textContent = settings.announcement_text;
@@ -55,7 +56,7 @@ function renderGallery(images) {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "gallery-thumbnail";
-    button.setAttribute("aria-label", `View image ${index + 1}`);
+    button.setAttribute("aria-label", `عرض الصورة ${index + 1}`);
     button.setAttribute("aria-pressed", index === 0 ? "true" : "false");
     const image = new Image();
     image.src = src;
@@ -126,13 +127,14 @@ function addToBag() {
   else cart.push(cartItem());
   localStorage.setItem(CART_KEY, JSON.stringify(cart));
   updateBagCount();
-  $("#purchase-feedback").textContent = "Added to your bag.";
+  $("#purchase-feedback").textContent = "تزاد المنتج للسلة.";
 }
 
-function openCheckout(items) {
+function openCheckout(items, clearCart = false) {
   checkoutItems = items;
+  clearCartAfterCheckout = clearCart;
   const total = items.reduce((sum, item) => sum + Number(item.price) * Number(item.quantity || 1), 0);
-  $("#checkout-summary").textContent = `${items.reduce((sum, item) => sum + Number(item.quantity || 1), 0)} item(s) · ${formatMoney(total)}`;
+  $("#checkout-summary").textContent = `${items.reduce((sum, item) => sum + Number(item.quantity || 1), 0)} منتجات · ${formatMoney(total)}`;
   $("#checkout-message").textContent = "";
   $("#checkout-message").className = "form-message";
   $("#checkout-form").reset();
@@ -177,8 +179,10 @@ async function submitCheckout(event) {
     });
     const result = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(result.error || `Could not submit the order (HTTP ${response.status}).`);
-    localStorage.removeItem(CART_KEY);
-    updateBagCount();
+    if (clearCartAfterCheckout) {
+      localStorage.removeItem(CART_KEY);
+      updateBagCount();
+    }
     $("#checkout-message").textContent = "Order received. We will call to confirm it.";
     $("#checkout-message").classList.add("success");
     window.setTimeout(() => $("#checkout-dialog").close(), 2200);
@@ -199,7 +203,7 @@ async function initialize() {
       $("#purchase-feedback").textContent = "Your bag is empty.";
       return;
     }
-    openCheckout(bag);
+    openCheckout(bag, true);
   });
   $("#add-to-bag").addEventListener("click", addToBag);
   $("#buy-now").addEventListener("click", () => openCheckout([cartItem()]));
@@ -213,12 +217,12 @@ async function initialize() {
       fetch("data/products.json", { cache: "no-cache" }),
       fetch("data/config.json", { cache: "no-cache" })
     ]);
-    if (!productsResponse.ok || !configResponse.ok) throw new Error("Could not load store data.");
+    if (!productsResponse.ok || !configResponse.ok) throw new Error("ما قدرناش نحملو بيانات المتجر.");
     const [products, settings] = await Promise.all([productsResponse.json(), configResponse.json()]);
-    if (!Array.isArray(products)) throw new Error("Product catalog is invalid.");
+    if (!Array.isArray(products)) throw new Error("ملف المنتجات فيه صيغة غير صحيحة.");
     const id = new URLSearchParams(location.search).get("id");
     product = products.find((item) => item.id === id && item.status !== "draft") || (!id ? products.find((item) => item.status !== "draft") : null);
-    if (!product) throw new Error("This product is not available.");
+    if (!product) throw new Error("هاد المنتج ما بقاش متوفر.");
     config = settings;
     setTheme(settings);
     const images = Array.isArray(product.images) ? product.images : [product.image].filter(Boolean);
@@ -234,7 +238,7 @@ async function initialize() {
     $("#gallery-badge").textContent = product.badge || "";
     $("#gallery-badge").hidden = !product.badge;
     const stock = Number(product.stock ?? 1);
-    $("#detail-stock").textContent = stock > 0 ? `${stock} available` : "Out of stock";
+    $("#detail-stock").textContent = stock > 0 ? `متوفر (${stock})` : "غير متوفر حالياً";
     $("#detail-stock").classList.toggle("out-of-stock", stock <= 0);
     $("#add-to-bag").disabled = stock <= 0;
     $("#buy-now").disabled = stock <= 0;
@@ -243,6 +247,40 @@ async function initialize() {
     renderOptions($("#color-options"), $("#color-group"), product.colors || [], (value) => { selectedColor = value; });
     renderRecommendations(products.filter((item) => item.status !== "draft"));
     document.title = `${product.name} | ${settings.store_name || "MougaMarket"}`;
+    const pageUrl = `https://mougamarket.store/product.html?id=${encodeURIComponent(product.id)}`;
+    const description = product.description || `تسوق ${product.name} من MougaMarket مع التوصيل لجميع المدن المغربية والدفع عند الاستلام.`;
+    document.querySelector('link[rel="canonical"]').href = pageUrl;
+    document.querySelector('meta[name="description"]').content = description;
+    document.querySelector('meta[property="og:title"]').content = `${product.name} | ${settings.store_name || "MougaMarket"}`;
+    document.querySelector('meta[property="og:description"]').content = description;
+    document.querySelector('meta[property="og:url"]').content = pageUrl;
+    const imageUrl = images[0] ? new URL(images[0], location.href).href : "";
+    if (imageUrl) {
+      const imageMeta = document.createElement("meta");
+      imageMeta.setAttribute("property", "og:image");
+      imageMeta.content = imageUrl;
+      document.head.append(imageMeta);
+    }
+    const schema = document.createElement("script");
+    schema.type = "application/ld+json";
+    schema.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: product.name,
+      description,
+      sku: String(product.id),
+      ...(imageUrl ? { image: imageUrl } : {}),
+      ...(product.category ? { category: product.category } : {}),
+      brand: { "@type": "Brand", name: settings.store_name || "MougaMarket" },
+      offers: {
+        "@type": "Offer",
+        url: pageUrl,
+        priceCurrency: "MAD",
+        price: Number(product.price).toFixed(2),
+        availability: Number(product.stock ?? 1) > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+      }
+    });
+    document.head.append(schema);
   } catch (error) {
     $("#product-status").textContent = error.message;
     $("#product-status").classList.add("error");

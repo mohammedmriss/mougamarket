@@ -1,27 +1,36 @@
 <!doctype html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f7f8f4">
-  <meta name="description" content="Discover product details and order from MougaMarket.">
-  <title>Product | MougaMarket</title>
+  <meta name="theme-color" content="#2563eb">
+  <meta name="description" content="اكتشف منتجات MougaMarket واطلب بسهولة مع التوصيل لجميع المدن المغربية والدفع عند الاستلام.">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://mougamarket.store/product.html">
+  <meta property="og:type" content="product">
+  <meta property="og:locale" content="ar_MA">
+  <meta property="og:site_name" content="MougaMarket">
+  <meta property="og:title" content="منتجات MougaMarket">
+  <meta property="og:description" content="منتجات مختارة مع التوصيل لجميع المدن المغربية والدفع عند الاستلام.">
+  <meta property="og:url" content="https://mougamarket.store/product.html">
+  <title>المنتج | MougaMarket</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/product.css">
   <script src="js/product.js" defer></script>
 </head>
 <body class="product-page">
   <div class="announcement" id="announcement" hidden></div>
+  <div class="topbar"><div class="topbar-inner"><a href="tel:+212726604185">0726-604185</a><p>التوصيل سريع لجميع المدن المغربية والدفع عند الاستلام</p></div></div>
   <header class="site-header">
-    <a class="brand" href="./" aria-label="MougaMarket home"><span class="brand-mark" aria-hidden="true">M</span><span id="store-name">MougaMarket</span></a>
-    <nav class="product-header-nav"><a href="./">Shop</a><a href="#recommendations">You might also like</a><button class="bag-button" id="bag-button" type="button">Bag <span id="bag-count">0</span></button></nav>
+    <a class="brand" href="./" aria-label="الصفحة الرئيسية"><span class="brand-mark" aria-hidden="true">م</span><span id="store-name">MougaMarket</span></a>
+    <nav class="product-header-nav" aria-label="التنقل الرئيسي"><a href="./">الرئيسية</a><a href="./#products">المنتجات</a><a href="./#about">من نحن</a><a href="contact.html">اتصل بنا</a><a href="privacy-policy.html">الخصوصية</a><a href="terms.html">الشروط</a><button class="bag-button" id="bag-button" type="button">🛒 السلة <span id="bag-count">0</span></button></nav>
   </header>
   <main class="product-main">
-    <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="./">Home</a><span>/</span><span id="breadcrumb-name">Product</span></nav>
-    <p class="product-status" id="product-status" role="status">Loading product...</p>
+    <nav class="breadcrumbs" aria-label="مسار التنقل"><a href="./">الرئيسية</a><span>/</span><span id="breadcrumb-name">المنتج</span></nav>
+    <p class="product-status" id="product-status" role="status">كنوجدو تفاصيل المنتج...</p>
     <section class="product-detail" id="product-detail" hidden>
       <div class="product-gallery">
-        <div class="gallery-thumbnails" id="gallery-thumbnails" aria-label="Product images"></div>
+        <div class="gallery-thumbnails" id="gallery-thumbnails" aria-label="صور المنتج"></div>
         <div class="gallery-feature">
           <img id="featured-image" alt="">
           <span class="gallery-badge" id="gallery-badge" hidden></span>
@@ -33,41 +42,41 @@
         <h1 id="detail-name"></h1>
         <p class="detail-price" id="detail-price"></p>
         <p class="detail-description" id="detail-description"></p>
-        <div class="variant-group" id="size-group" hidden><h2>Size</h2><div class="variant-options" id="size-options"></div></div>
-        <div class="variant-group" id="color-group" hidden><h2>Color</h2><div class="variant-options" id="color-options"></div></div>
+        <div class="variant-group" id="size-group" hidden><h2>المقاس</h2><div class="variant-options" id="size-options"></div></div>
+        <div class="variant-group" id="color-group" hidden><h2>اللون</h2><div class="variant-options" id="color-options"></div></div>
         <div class="detail-stock" id="detail-stock"></div>
         <div class="purchase-actions">
-          <button class="button button-primary purchase-button" id="add-to-bag" type="button">Add to Bag</button>
-          <button class="button button-outline purchase-button" id="buy-now" type="button">Checkout / Buy Now</button>
+          <button class="button button-primary purchase-button" id="buy-now" type="button">اطلب الآن</button>
+          <button class="button button-secondary purchase-button" id="add-to-bag" type="button">🛒 أضف إلى السلة</button>
         </div>
         <div class="purchase-feedback" id="purchase-feedback" role="status"></div>
         <div class="shipping-cards">
-          <article><span aria-hidden="true">↗</span><div><strong>Delivery across Morocco</strong><p>Delivery to your door in cities across Morocco.</p></div></article>
-          <article><span aria-hidden="true">↺</span><div><strong>Easy returns</strong><p>Contact our team if there is a problem with your order.</p></div></article>
-          <article><span aria-hidden="true">د.م</span><div><strong>Cash on delivery</strong><p>Pay when your order arrives.</p></div></article>
+          <article><span aria-hidden="true">↗</span><div><strong>التوصيل لجميع المدن المغربية</strong><p>نوصّل طلبك حتى لباب دارك.</p></div></article>
+          <article><span aria-hidden="true">↺</span><div><strong>خدمة قريبة</strong><p>تواصل معنا إذا احتجت المساعدة بخصوص طلبك.</p></div></article>
+          <article><span aria-hidden="true">د.م</span><div><strong>الدفع عند الاستلام</strong><p>أدّ المبلغ عند وصول طلبك.</p></div></article>
         </div>
       </section>
     </section>
     <section class="recommendations-section" id="recommendations" hidden>
-      <div class="recommendations-heading"><div><span class="section-kicker">COMPLETE YOUR LOOK</span><h2>YOU MIGHT ALSO LIKE</h2></div><a href="./#products">Shop all →</a></div>
+      <div class="recommendations-heading"><div><span class="section-kicker">قد تعجبك أيضاً</span><h2>منتجات مقترحة</h2></div><a href="./#products">تسوق جميع المنتجات ←</a></div>
       <div class="recommendation-grid" id="recommendation-grid"></div>
     </section>
   </main>
-  <footer class="site-footer"><a class="brand footer-brand" href="./"><span class="brand-mark">M</span><span id="footer-store-name">MougaMarket</span></a><p>© <span id="year"></span> All rights reserved.</p></footer>
+  <footer class="site-footer"><a class="brand footer-brand" href="./"><span class="brand-mark">م</span><span id="footer-store-name">MougaMarket</span></a><nav class="footer-links" aria-label="روابط قانونية"><a href="privacy-policy.html">سياسة الخصوصية</a><a href="terms.html">الشروط والأحكام</a><a href="contact.html">التواصل</a></nav><p>© <span id="year"></span> جميع الحقوق محفوظة.</p></footer>
 
   <dialog class="order-dialog" id="checkout-dialog" aria-labelledby="checkout-title">
     <form class="order-form" id="checkout-form">
-      <button class="dialog-close" id="close-checkout" type="button" aria-label="Close">×</button>
-      <p class="eyebrow">Quick checkout</p>
-      <h2 id="checkout-title">Delivery details</h2>
+      <button class="dialog-close" id="close-checkout" type="button" aria-label="إغلاق">×</button>
+      <p class="eyebrow">طلب سريع</p>
+      <h2 id="checkout-title">معلومات التوصيل</h2>
       <p class="selected-product" id="checkout-summary"></p>
-      <label for="customer-name">Full name</label><input id="customer-name" name="name" autocomplete="name" maxlength="100" required>
-      <label for="customer-phone">Phone number</label><input id="customer-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="06, 07 or +212" maxlength="13" required>
-      <label for="customer-city">City</label><input id="customer-city" name="city" autocomplete="address-level2" maxlength="80" required>
-      <label class="honeypot" aria-hidden="true">Leave empty<input name="website" tabindex="-1" autocomplete="off"></label>
+      <label for="customer-name">الاسم الكامل</label><input id="customer-name" name="name" autocomplete="name" maxlength="100" required>
+      <label for="customer-phone">رقم الهاتف</label><input id="customer-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="06 أو 07 أو +212" maxlength="13" required>
+      <label for="customer-city">العنوان الكامل</label><input id="customer-city" name="city" autocomplete="address-level2" placeholder="أدخل مدينتك وعنوانك بالتفصيل" maxlength="80" required>
+      <label class="honeypot" aria-hidden="true">اترك هذه الخانة فارغة<input name="website" tabindex="-1" autocomplete="off"></label>
       <p class="form-message" id="checkout-message" role="status"></p>
-      <button class="button button-primary submit-order" id="submit-checkout" type="submit">Place order</button>
-      <small class="privacy-note">Your details are only used to confirm and deliver your order.</small>
+      <button class="button button-primary submit-order" id="submit-checkout" type="submit">تأكيد الطلب</button>
+      <small class="privacy-note">نستعمل معلوماتك فقط للتواصل معك وتأكيد الطلب.</small>
     </form>
   </dialog>
 </body>

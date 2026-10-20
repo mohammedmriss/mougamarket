@@ -5,7 +5,7 @@
   "store_phone": "",
   "order_endpoint": "https://mougamarket-orders.mrissmohammed20.workers.dev/orders",
   "theme": {
-    "primary_color": "#176b4b",
+    "primary_color": "#2563eb",
     "font_family": "system-ui, sans-serif"
   },
   "slider_images": [

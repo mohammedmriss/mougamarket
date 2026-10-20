@@ -4,8 +4,10 @@ const orderDialog = document.querySelector("#order-dialog");
 const orderForm = document.querySelector("#order-form");
 const orderMessage = document.querySelector("#order-message");
 const submitOrderButton = document.querySelector("#submit-order");
+const CART_KEY = "mougamarket-bag";
 
 let activeProduct = null;
+let checkoutItems = [];
 let storeConfig = {};
 let slides = [];
 let currentSlide = 0;
@@ -16,6 +18,33 @@ function element(tag, className, text) {
   if (className) node.className = className;
   if (text !== undefined) node.textContent = text;
   return node;
+}
+
+function getCart() {
+  try {
+    const cart = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
+    return Array.isArray(cart) ? cart : [];
+  } catch {
+    return [];
+  }
+}
+
+function updateCartCount() {
+  const count = getCart().reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  const badge = document.querySelector("#cart-count");
+  if (badge) badge.textContent = String(count);
+}
+
+function addToCart(product, button) {
+  if (Number(product.stock ?? 1) <= 0) return;
+  const cart = getCart();
+  const existing = cart.find((item) => item.id === product.id && !item.size && !item.color);
+  if (existing) existing.quantity = Number(existing.quantity || 1) + 1;
+  else cart.push({ id: product.id, name: product.name, price: product.price, quantity: 1 });
+  localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  updateCartCount();
+  button.textContent = "تمت الإضافة ✓";
+  window.setTimeout(() => { button.textContent = "🛒 أضف إلى السلة"; }, 1400);
 }
 
 function renderProducts(products) {
@@ -58,7 +87,14 @@ function renderProducts(products) {
     orderButton.disabled = Number(product.stock ?? 1) <= 0;
     if (orderButton.disabled) orderButton.textContent = "غير متوفر";
     orderButton.addEventListener("click", () => openOrderDialog(product));
-    footer.append(price, orderButton);
+    const cartButton = element("button", "button button-secondary cart-button", "🛒 أضف إلى السلة");
+    cartButton.type = "button";
+    cartButton.disabled = Number(product.stock ?? 1) <= 0;
+    if (cartButton.disabled) cartButton.textContent = "غير متوفر";
+    cartButton.addEventListener("click", () => addToCart(product, cartButton));
+    const actions = element("div", "product-actions");
+    actions.append(orderButton, cartButton);
+    footer.append(price, actions);
     content.append(footer);
     card.append(imageWrap, content);
     productsGrid.append(card);
@@ -67,8 +103,28 @@ function renderProducts(products) {
 
 function openOrderDialog(product) {
   activeProduct = product;
+  checkoutItems = [{ id: product.id, name: product.name, price: product.price, quantity: 1 }];
   document.querySelector("#selected-product").textContent =
     `${product.name} — ${new Intl.NumberFormat("fr-MA").format(product.price)} درهم`;
+  orderMessage.textContent = "";
+  orderMessage.className = "form-message";
+  orderForm.reset();
+  orderDialog.showModal();
+  document.querySelector("#customer-name").focus();
+}
+
+function openCartDialog() {
+  const cart = getCart();
+  if (!cart.length) {
+    productsStatus.textContent = "السلة فارغة، أضف إليها المنتجات التي أعجبتك.";
+    document.querySelector("#products").scrollIntoView({ behavior: "smooth" });
+    return;
+  }
+  activeProduct = null;
+  checkoutItems = cart;
+  const total = cart.reduce((sum, item) => sum + Number(item.price) * Number(item.quantity || 1), 0);
+  const count = cart.reduce((sum, item) => sum + Number(item.quantity || 1), 0);
+  document.querySelector("#selected-product").textContent = `${count} منتجات · ${new Intl.NumberFormat("fr-MA").format(total)} درهم`;
   orderMessage.textContent = "";
   orderMessage.className = "form-message";
   orderForm.reset();
@@ -84,8 +140,8 @@ function normalizeMoroccanPhone(phone) {
 
 async function submitOrder(event) {
   event.preventDefault();
-  if (!activeProduct) {
-    orderMessage.textContent = "اختار منتوج قبل ما تصيفط الطلب.";
+  if (!checkoutItems.length) {
+    orderMessage.textContent = "أضف منتجاً قبل إرسال الطلب.";
     return;
   }
   const formData = new FormData(orderForm);
@@ -112,8 +168,8 @@ async function submitOrder(event) {
         name: String(formData.get("name") || "").trim(),
         phone,
         city: String(formData.get("city") || "").trim(),
-        items: [{ id: activeProduct.id, name: activeProduct.name, price: activeProduct.price, quantity: 1 }],
-        total: activeProduct.price,
+        items: checkoutItems,
+        total: checkoutItems.reduce((sum, item) => sum + Number(item.price) * Number(item.quantity || 1), 0),
         website: ""
       })
     });
@@ -123,6 +179,11 @@ async function submitOrder(event) {
     }
     orderMessage.textContent = "وصلنا الطلب ديالك، غادي نتاصلو بيك باش نأكدو.";
     orderMessage.classList.add("success");
+    if (!activeProduct) {
+      localStorage.removeItem(CART_KEY);
+      updateCartCount();
+    }
+    checkoutItems = [];
     orderForm.reset();
     window.setTimeout(() => orderDialog.close(), 2200);
   } catch (error) {
@@ -180,6 +241,8 @@ function setupSlider(config) {
 
 async function initializeStore() {
   document.querySelector("#year").textContent = String(new Date().getFullYear());
+  updateCartCount();
+  document.querySelector("#cart-button").addEventListener("click", openCartDialog);
   try {
     const [productsResponse, configResponse] = await Promise.all([
       fetch("data/products.json", { cache: "no-cache" }),
@@ -191,13 +254,13 @@ async function initializeStore() {
     if (!Array.isArray(products)) throw new Error("ملف المنتجات فيه صيغة غير صحيحة.");
     storeConfig = config;
     if (/^#[0-9a-f]{6}$/i.test(config.theme?.primary_color || "")) {
-      document.documentElement.style.setProperty("--green", config.theme.primary_color);
+      document.documentElement.style.setProperty("--blue", config.theme.primary_color);
     }
     if (typeof config.theme?.font_family === "string") document.documentElement.style.fontFamily = config.theme.font_family;
     if (config.store_name) {
       document.querySelector("#store-name").textContent = config.store_name;
       document.querySelector("#footer-store-name").textContent = config.store_name;
-      document.title = `${config.store_name} | تسوق بسهولة`;
+      document.title = `${config.store_name} | تسوق أونلاين في المغرب`;
     }
     if (config.logo_url) {
       document.querySelectorAll(".brand-mark").forEach((mark) => {
@@ -218,6 +281,8 @@ async function initializeStore() {
       footerPhone.href = `tel:${config.store_phone.replace(/[^\d+]/g, "")}`;
       footerPhone.textContent = config.store_phone;
       footerPhone.hidden = false;
+      document.querySelector("#topbar-phone").href = footerPhone.href;
+      document.querySelector("#topbar-phone").textContent = config.store_phone;
     }
     setupSlider(config);
     renderProducts(products);
