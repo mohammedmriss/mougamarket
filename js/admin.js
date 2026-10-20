@@ -15,7 +15,6 @@ let githubToken = "";
 let repository = "";
 let branch = "main";
 let workerEndpoint = "";
-let adminKey = "";
 let products = [];
 let config = {};
 let orders = [];
@@ -92,7 +91,6 @@ function fillConnectionForm(saved) {
   $("#branch").value = saved.branch || "main";
   $("#github-token").value = saved.githubToken || "";
   $("#worker-endpoint").value = saved.workerEndpoint || "";
-  $("#admin-key").value = saved.adminKey || "";
 }
 
 function encodeBase64(text) {
@@ -158,7 +156,6 @@ async function workerRequest(path, options = {}) {
     ...options,
     headers: {
       "Content-Type": "application/json",
-      "X-Admin-Key": adminKey,
       Authorization: `Bearer ${adminSessionToken}`,
       ...options.headers
     }
@@ -399,7 +396,7 @@ function renderOrders() {
 }
 
 async function refreshOrders() {
-  if (!workerEndpoint || !adminKey) return;
+  if (!workerEndpoint || !adminSessionToken) return;
   message($("#orders-message"), "Loading orders...");
   try {
     const result = await workerRequest("/admin/orders");
@@ -477,7 +474,6 @@ async function connectServices(credentials, remember = true) {
   branch = credentials.branch.trim() || "main";
   githubToken = credentials.githubToken.trim();
   workerEndpoint = credentials.workerEndpoint.trim();
-  adminKey = credentials.adminKey.trim();
   const connectButton = $("#connect-button");
   connectButton.disabled = true;
   message($("#connection-message"), "Connecting to GitHub and the orders service...");
@@ -495,7 +491,7 @@ async function connectServices(credentials, remember = true) {
     config = loadedConfig;
     orders = Array.isArray(loadedOrders.orders) ? loadedOrders.orders : [];
     if (remember) {
-      localStorage.setItem(CONNECTION_KEY, JSON.stringify({ repository, branch, githubToken, workerEndpoint, adminKey }));
+      localStorage.setItem(CONNECTION_KEY, JSON.stringify({ repository, branch, githubToken, workerEndpoint }));
     }
     workspace.hidden = false;
     $("#connection-indicator").textContent = "Connected";
@@ -503,14 +499,12 @@ async function connectServices(credentials, remember = true) {
     $("#connection-panel").hidden = true;
     $("#logout-button").hidden = false;
     $("#github-token").value = "";
-    $("#admin-key").value = "";
     renderProducts();
     renderOrders();
     message($("#connection-message"), "Connected successfully.", "success");
     navigate("dashboard");
   } catch (error) {
     githubToken = "";
-    adminKey = "";
     message($("#connection-message"), error.message, "error");
   } finally {
     connectButton.disabled = false;
@@ -523,8 +517,7 @@ connectionForm.addEventListener("submit", (event) => {
     repository: $("#repository").value.trim(),
     branch: $("#branch").value.trim() || "main",
     githubToken: $("#github-token").value.trim(),
-    workerEndpoint: $("#worker-endpoint").value.trim(),
-    adminKey: $("#admin-key").value.trim()
+    workerEndpoint: $("#worker-endpoint").value.trim()
   };
   if (!/^[^/\s]+\/[^/\s]+$/.test(credentials.repository)) {
     message($("#connection-message"), "Use the owner/repository format.", "error");
@@ -562,7 +555,6 @@ $("#logout-button").addEventListener("click", () => {
   localStorage.removeItem(CONNECTION_KEY);
   localStorage.removeItem("mougamarket-admin-account");
   githubToken = "";
-  adminKey = "";
   adminSessionToken = "";
   authenticatedWorkerEndpoint = "";
   repository = "";
@@ -686,7 +678,7 @@ $("#page-next").addEventListener("click", () => { currentPage += 1; renderProduc
 $("#order-status-filter").addEventListener("change", renderOrders);
 $("#refresh-orders").addEventListener("click", refreshOrders);
 $("#mobile-menu").addEventListener("click", () => $(".admin-shell").classList.toggle("menu-open"));
-window.addEventListener("pagehide", () => { githubToken = ""; adminKey = ""; adminSessionToken = ""; });
+window.addEventListener("pagehide", () => { githubToken = ""; adminSessionToken = ""; });
 
 async function initializeAdminAccess() {
   const session = readLocalJson(SESSION_KEY);

@@ -58,9 +58,8 @@
           <label>Branch <input id="branch" name="branch" value="main" required></label>
           <label>GitHub fine-grained token <input id="github-token" name="token" type="password" autocomplete="off" required></label>
           <label>Worker endpoint <input id="worker-endpoint" name="endpoint" type="url" placeholder="https://orders.example.workers.dev" required></label>
-          <label>Admin API key <input id="admin-key" name="adminKey" type="password" autocomplete="off" required></label>
           <button class="button button-primary" id="connect-button" type="submit">Connect</button>
-          <p class="security-note">Use a fine-grained token limited to this repository with Contents read/write. The GitHub token and Worker API key are saved in this browser for automatic reconnect.</p>
+          <p class="security-note">Use a fine-grained token limited to this repository with Contents read/write. The GitHub token is saved in this browser for automatic reconnect; Worker requests use your signed admin session.</p>
         </form>
         <p class="admin-message" id="connection-message" role="status"></p>
       </section>

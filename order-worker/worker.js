@@ -10,7 +10,7 @@ function corsHeaders(origin) {
   return {
     "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Methods": "POST, GET, PATCH, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, X-Admin-Key, Authorization",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Access-Control-Max-Age": "86400",
     "Vary": "Origin"
   };
@@ -63,7 +63,7 @@ async function signAdminSession(email, env) {
   }));
   const key = await crypto.subtle.importKey(
     "raw",
-    new TextEncoder().encode(env.ADMIN_API_KEY),
+    new TextEncoder().encode(env.ADMIN_SESSION_SECRET),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"]
@@ -77,11 +77,11 @@ async function signAdminSession(email, env) {
 async function getAdminSession(request, env) {
   const token = (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
   const [payload, signature, extra] = token.split(".");
-  if (!payload || !signature || extra || !env.ADMIN_API_KEY) return null;
+  if (!payload || !signature || extra || !env.ADMIN_SESSION_SECRET) return null;
   try {
     const key = await crypto.subtle.importKey(
       "raw",
-      new TextEncoder().encode(env.ADMIN_API_KEY),
+      new TextEncoder().encode(env.ADMIN_SESSION_SECRET),
       { name: "HMAC", hash: "SHA-256" },
       false,
       ["verify"]
@@ -98,7 +98,7 @@ async function getAdminSession(request, env) {
 }
 
 async function createAdminSession(request, env, origin) {
-  if (!env.ADMIN_LOGIN_EMAIL || !env.ADMIN_LOGIN_PASSWORD || !env.ADMIN_API_KEY) {
+  if (!env.ADMIN_LOGIN_EMAIL || !env.ADMIN_LOGIN_PASSWORD || !env.ADMIN_SESSION_SECRET) {
     return jsonResponse({ error: "Admin login is not configured." }, 503, origin);
   }
   if (!(request.headers.get("Content-Type") || "").includes("application/json")) {
@@ -240,7 +240,7 @@ async function createOrder(request, env, origin) {
 
 async function handleAdminRequest(request, env, origin, pathname) {
   const session = await getAdminSession(request, env);
-  if (!env.ADMIN_API_KEY || request.headers.get("X-Admin-Key") !== env.ADMIN_API_KEY || !session) {
+  if (!session) {
     return jsonResponse({ error: "Unauthorized." }, 401, origin);
   }
   if (pathname === "/admin/orders" && request.method === "GET") {
