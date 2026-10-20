@@ -3,7 +3,7 @@
   "logo_url": "",
   "announcement_text": "التوصيل لجميع المدن المغربية والدفع عند الاستلام",
   "store_phone": "",
-  "order_endpoint": "https://mougamarket-orders.mrissmohammed20.workers.dev/orders",
+  "order_endpoint": "https://mougamarket-orders.mrissmohammed20.workers.dev",
   "theme": {
     "primary_color": "#2563eb",
     "font_family": "system-ui, sans-serif"
