@@ -8,6 +8,9 @@ const PRODUCTS_PATH = "data/products.json";
 const CONFIG_PATH = "data/config.json";
 const API_ROOT = "https://api.github.com";
 const PAGE_SIZE = 8;
+const ACCOUNT_KEY = "mougamarket-admin-account";
+const CONNECTION_KEY = "mougamarket-admin-connection";
+const SESSION_KEY = "mougamarket-admin-session";
 
 let githubToken = "";
 let repository = "";
@@ -20,10 +23,64 @@ let orders = [];
 let fileShas = {};
 let currentPage = 1;
 let activeView = "dashboard";
+let signedInEmail = "";
 
 function message(target, text, type = "") {
   target.textContent = text;
   target.className = `admin-message${type ? ` ${type}` : ""}`;
+}
+
+function readLocalJson(key) {
+  try {
+    return JSON.parse(localStorage.getItem(key) || "null");
+  } catch {
+    return null;
+  }
+}
+
+function toHex(bytes) {
+  return [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+async function hashPassword(password, saltHex) {
+  if (!crypto.subtle) throw new Error("Use HTTPS to set up the local admin account.");
+  const salt = Uint8Array.from(saltHex.match(/.{2}/g) || [], (byte) => Number.parseInt(byte, 16));
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
+  const digest = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt, iterations: 150000 }, key, 256);
+  return toHex(new Uint8Array(digest));
+}
+
+function equalStrings(left, right) {
+  if (left.length !== right.length) return false;
+  let difference = 0;
+  for (let index = 0; index < left.length; index += 1) difference |= left.charCodeAt(index) ^ right.charCodeAt(index);
+  return difference === 0;
+}
+
+async function authenticateLocal(email, password) {
+  const account = readLocalJson(ACCOUNT_KEY);
+  if (!account) {
+    const salt = toHex(crypto.getRandomValues(new Uint8Array(16)));
+    const passwordHash = await hashPassword(password, salt);
+    localStorage.setItem(ACCOUNT_KEY, JSON.stringify({ email, salt, passwordHash }));
+    return true;
+  }
+  if (String(account.email || "").toLowerCase() !== email.toLowerCase() || !account.salt || !account.passwordHash) return false;
+  return equalStrings(await hashPassword(password, account.salt), account.passwordHash);
+}
+
+function showConnectionStage() {
+  $("#login-panel").hidden = true;
+  $("#connection-panel").hidden = false;
+  $("#admin-shell").classList.remove("auth-locked");
+}
+
+function fillConnectionForm(saved) {
+  $("#repository").value = saved.repository || "";
+  $("#branch").value = saved.branch || "main";
+  $("#github-token").value = saved.githubToken || "";
+  $("#worker-endpoint").value = saved.workerEndpoint || "";
+  $("#admin-key").value = saved.adminKey || "";
 }
 
 function encodeBase64(text) {
@@ -402,21 +459,14 @@ async function updateOrderStatus(orderId, status, select) {
   }
 }
 
-connectionForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const repoValue = $("#repository").value.trim();
-  if (!/^[^/\s]+\/[^/\s]+$/.test(repoValue)) {
-    message($("#connection-message"), "Use the owner/repository format.", "error");
-    return;
-  }
-  repository = repoValue;
-  branch = $("#branch").value.trim();
-  githubToken = $("#github-token").value.trim();
-  workerEndpoint = $("#worker-endpoint").value.trim();
-  adminKey = $("#admin-key").value.trim();
-  $("#github-token").value = "";
-  $("#admin-key").value = "";
-  $("#connect-button").disabled = true;
+async function connectServices(credentials, remember = true) {
+  repository = credentials.repository.trim();
+  branch = credentials.branch.trim() || "main";
+  githubToken = credentials.githubToken.trim();
+  workerEndpoint = credentials.workerEndpoint.trim();
+  adminKey = credentials.adminKey.trim();
+  const connectButton = $("#connect-button");
+  connectButton.disabled = true;
   message($("#connection-message"), "Connecting to GitHub and the orders service...");
   try {
     const [loadedProducts, loadedConfig, loadedOrders] = await Promise.all([
@@ -428,10 +478,17 @@ connectionForm.addEventListener("submit", async (event) => {
     products = loadedProducts;
     config = loadedConfig;
     orders = Array.isArray(loadedOrders.orders) ? loadedOrders.orders : [];
+    if (remember) {
+      localStorage.setItem(CONNECTION_KEY, JSON.stringify({ repository, branch, githubToken, workerEndpoint, adminKey }));
+      localStorage.setItem(SESSION_KEY, JSON.stringify({ email: signedInEmail }));
+    }
     workspace.hidden = false;
     $("#connection-indicator").textContent = "Connected";
     $("#connection-indicator").classList.add("connected");
     $("#connection-panel").hidden = true;
+    $("#logout-button").hidden = false;
+    $("#github-token").value = "";
+    $("#admin-key").value = "";
     renderProducts();
     renderOrders();
     message($("#connection-message"), "Connected successfully.", "success");
@@ -441,8 +498,69 @@ connectionForm.addEventListener("submit", async (event) => {
     adminKey = "";
     message($("#connection-message"), error.message, "error");
   } finally {
-    $("#connect-button").disabled = false;
+    connectButton.disabled = false;
   }
+}
+
+connectionForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const credentials = {
+    repository: $("#repository").value.trim(),
+    branch: $("#branch").value.trim() || "main",
+    githubToken: $("#github-token").value.trim(),
+    workerEndpoint: $("#worker-endpoint").value.trim(),
+    adminKey: $("#admin-key").value.trim()
+  };
+  if (!/^[^/\s]+\/[^/\s]+$/.test(credentials.repository)) {
+    message($("#connection-message"), "Use the owner/repository format.", "error");
+    return;
+  }
+  connectServices(credentials);
+});
+
+$("#login-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const email = $("#login-email").value.trim().toLowerCase();
+  const password = $("#login-password").value;
+  const loginButton = $("#login-button");
+  loginButton.disabled = true;
+  message($("#login-message"), "Checking local account...");
+  try {
+    const valid = await authenticateLocal(email, password);
+    if (!valid) throw new Error("Email or password is incorrect.");
+    signedInEmail = email;
+    $("#login-form").reset();
+    showConnectionStage();
+    message($("#connection-message"), "Sign-in complete. Connect your services to continue.");
+  } catch (error) {
+    message($("#login-message"), error.message || "Could not verify the local account.", "error");
+  } finally {
+    loginButton.disabled = false;
+  }
+});
+
+$("#logout-button").addEventListener("click", () => {
+  localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(CONNECTION_KEY);
+  githubToken = "";
+  adminKey = "";
+  repository = "";
+  branch = "main";
+  workerEndpoint = "";
+  signedInEmail = "";
+  products = [];
+  config = {};
+  orders = [];
+  fileShas = {};
+  connectionForm.reset();
+  workspace.hidden = true;
+  $("#logout-button").hidden = true;
+  $("#connection-indicator").textContent = "Not connected";
+  $("#connection-indicator").classList.remove("connected");
+  $("#connection-panel").hidden = true;
+  $("#login-panel").hidden = false;
+  $("#admin-shell").classList.add("auth-locked");
+  message($("#login-message"), "You have been logged out.");
 });
 
 productForm.addEventListener("submit", async (event) => {
@@ -548,3 +666,18 @@ $("#order-status-filter").addEventListener("change", renderOrders);
 $("#refresh-orders").addEventListener("click", refreshOrders);
 $("#mobile-menu").addEventListener("click", () => $(".admin-shell").classList.toggle("menu-open"));
 window.addEventListener("pagehide", () => { githubToken = ""; adminKey = ""; });
+
+async function initializeAdminAccess() {
+  const account = readLocalJson(ACCOUNT_KEY);
+  $("#login-title").textContent = account ? "Admin sign in" : "Set up local admin";
+  $("#login-button").textContent = account ? "Sign in" : "Create local account";
+  const session = readLocalJson(SESSION_KEY);
+  const savedConnection = readLocalJson(CONNECTION_KEY);
+  if (!session?.email || !savedConnection) return;
+  signedInEmail = String(session.email).toLowerCase();
+  showConnectionStage();
+  fillConnectionForm(savedConnection);
+  await connectServices(savedConnection, false);
+}
+
+initializeAdminAccess();

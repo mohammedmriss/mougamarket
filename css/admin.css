@@ -1,6 +1,20 @@
 :root { --admin-bg: #f5f7f9; --admin-line: #e8ebef; --admin-muted: #77818d; --admin-sidebar: #fff; }
 body.admin-page { min-height: 100vh; background: var(--admin-bg); color: #202a36; }
 .admin-shell { min-height: 100vh; display: grid; grid-template-columns: 248px minmax(0, 1fr); direction: ltr; }
+.admin-shell.auth-locked { grid-template-columns: minmax(0, 1fr); }
+.admin-shell.auth-locked .admin-sidebar, .admin-shell.auth-locked .admin-topbar { display: none; }
+.admin-shell.auth-locked .admin-main { display: grid; min-height: 100vh; place-items: center; padding: 28px 18px; }
+.admin-shell.auth-locked #connection-panel, .admin-shell.auth-locked #admin-workspace { display: none; }
+.auth-panel { width: min(440px, 100%); margin: auto; }
+.auth-panel h1 { margin: 3px 0 0; font-size: 1.35rem; }
+.auth-form { display: grid; gap: 13px; }
+.auth-form label { display: grid; gap: 6px; color: #4d5966; font-size: .8rem; font-weight: 600; }
+.auth-form input { width: 100%; min-height: 42px; padding: 8px 10px; border: 1px solid #dfe4e9; border-radius: 7px; background: #fff; color: #26313d; outline: none; }
+.auth-form input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px #2563eb19; }
+.auth-form .button { margin-top: 3px; }
+.auth-panel .security-note { margin-top: 14px; }
+.logout-button { margin-left: 12px; white-space: nowrap; }
+.logout-button[hidden] { display: none; }
 .admin-sidebar { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; padding: 23px 15px; background: var(--admin-sidebar); border-right: 1px solid var(--admin-line); }
 .admin-brand { display: flex; align-items: center; gap: 10px; padding: 4px 10px 29px; font-weight: 750; font-size: 1.04rem; }
 .admin-brand .brand-mark { width: 35px; height: 35px; border-radius: 11px; }
