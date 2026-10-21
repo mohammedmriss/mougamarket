@@ -85,14 +85,22 @@ function workerUrl(path) {
 }
 
 async function workerRequest(path, options = {}) {
-  const response = await fetch(workerUrl(path), {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      "X-Admin-Key": adminKey,
-      ...options.headers
+  let response;
+  try {
+    response = await fetch(workerUrl(path), {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        "X-Admin-Key": adminKey,
+        ...options.headers
+      }
+    });
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error("Could not reach the Worker. Check its URL and redeploy its CORS settings to allow this site and the X-Admin-Key request header.");
     }
-  });
+    throw error;
+  }
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(body.error || `Order service error (${response.status}).`);
   return body;

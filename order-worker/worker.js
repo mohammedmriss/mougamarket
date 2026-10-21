@@ -10,7 +10,7 @@ function corsHeaders(origin) {
   return {
     "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Methods": "POST, GET, PATCH, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, X-Admin-Key",
+    "Access-Control-Allow-Headers": "Content-Type, X-Admin-Key, Authorization",
     "Access-Control-Max-Age": "86400",
     "Vary": "Origin"
   };

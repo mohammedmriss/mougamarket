@@ -27,7 +27,16 @@ npx wrangler secret put SHEETS_WEB_APP_URL --config order-worker/wrangler.toml
 npx wrangler deploy --config order-worker/wrangler.toml
 ```
 
-Use the same random value for `SHEETS_WEBHOOK_SECRET` and the Apps Script `WORKER_SHARED_SECRET`. Keep `ADMIN_API_KEY` separate and private. Set `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` from BotFather and your Telegram chat. Enter secret values only when Wrangler prompts; never put them in source files.
+If the Worker already has the Telegram and Sheets secrets, add or replace just its admin key, then deploy the current CORS code:
+
+```text
+npx wrangler secret put ADMIN_API_KEY --config order-worker/wrangler.toml
+npx wrangler deploy --config order-worker/wrangler.toml
+```
+
+Wrangler prompts for the secret value in the terminal. Use a long, unique random value; do not paste it into source files or commit it. Enter other secret values only when Wrangler prompts.
+
+Use the same random value for `SHEETS_WEBHOOK_SECRET` and the Apps Script `WORKER_SHARED_SECRET`. Keep `ADMIN_API_KEY` separate and private. Set `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` from BotFather and your Telegram chat.
 
 `ALLOWED_ORIGINS` in `wrangler.toml` lists the permitted storefront origins. Update it to include the exact `https://` origin(s) you use, without a path or trailing slash. The default allows `https://mougamarket.store` and `https://www.mougamarket.store`.
 
@@ -39,6 +48,8 @@ Use the same random value for `SHEETS_WEBHOOK_SECRET` and the Apps Script `WORKE
 4. Use the product editor to manage products; the settings screen changes `data/config.json`. Orders are listed from Sheets and their status is updated there.
 
 The GitHub token and admin key are held in JavaScript memory for the current tab only. The storefront never receives either credential. As with any static page, anyone can open the admin page, but without the GitHub token and admin key they cannot modify the repository or retrieve orders.
+
+The admin panel sends the Worker key as `X-Admin-Key`. The Worker's CORS preflight response must allow `Content-Type` and `X-Admin-Key`; after changing CORS or Worker secrets, redeploy with Wrangler. A missing or incorrect `ADMIN_API_KEY` returns HTTP 401 after CORS succeeds. A browser `Failed to fetch` usually indicates a blocked preflight, incorrect Worker URL, or network/DNS problem rather than an invalid key.
 
 ## Product fields
 
