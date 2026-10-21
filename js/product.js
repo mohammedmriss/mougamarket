@@ -10,7 +10,6 @@ let clearCartAfterCheckout = false;
 function formatMoney(value) {
   return `${new Intl.NumberFormat("fr-MA", { maximumFractionDigits: 2 }).format(value)} درهم`;
 }
-
 function setTheme(settings) {
   if (/^#[0-9a-f]{6}$/i.test(settings.theme?.primary_color || "")) {
     document.documentElement.style.setProperty("--blue", settings.theme.primary_color);
@@ -20,10 +19,16 @@ function setTheme(settings) {
     $("#store-name").textContent = settings.store_name;
     $("#footer-store-name").textContent = settings.store_name;
     document.title = `${product?.name || "المنتج"} | ${settings.store_name}`;
+    document.querySelectorAll('meta[property^="og:"]').forEach((meta) => { meta.content = meta.content.replace(/MougaMarket/g, settings.store_name); });
   }
   if (settings.announcement_text) {
     $("#announcement").textContent = settings.announcement_text;
     $("#announcement").hidden = false;
+  }
+  if (settings.store_phone) {
+    const phoneLink = $("#topbar-phone");
+    phoneLink.href = `tel:${settings.store_phone.replace(/[^\d+]/g, "")}`;
+    phoneLink.textContent = settings.store_phone;
   }
   if (settings.logo_url) {
     const mark = document.querySelector(".product-page .brand-mark");
@@ -62,6 +67,11 @@ function renderGallery(images) {
     image.src = src;
     image.alt = "";
     image.loading = index ? "lazy" : "eager";
+    image.addEventListener("error", () => {
+      button.classList.add("image-unavailable");
+      image.removeAttribute("src");
+      image.alt = "الصورة غير متوفرة";
+    }, { once: true });
     button.append(image);
     button.addEventListener("click", () => {
       $("#featured-image").src = src;
@@ -71,24 +81,39 @@ function renderGallery(images) {
   });
   $("#featured-image").src = safeImages[0];
   $("#featured-image").alt = product.name;
+  $("#featured-image").loading = "eager";
+  $("#featured-image").addEventListener("error", () => {
+    $("#featured-image").removeAttribute("src");
+    $("#featured-image").alt = "الصورة غير متوفرة";
+    $("#featured-image").parentElement.classList.add("image-unavailable");
+  }, { once: true });
 }
 
 function renderOptions(container, group, values, onSelect) {
   group.hidden = !values.length;
   container.replaceChildren();
+  if (!values.length) onSelect("");
   values.forEach((value, index) => {
     const option = document.createElement("button");
     option.type = "button";
     option.className = "variant-option";
     option.textContent = value;
-    option.setAttribute("aria-pressed", String(index === 0));
+    option.setAttribute("aria-pressed", "false");
     option.addEventListener("click", () => {
       container.querySelectorAll("button").forEach((item) => item.setAttribute("aria-pressed", String(item === option)));
       onSelect(value);
+      updatePurchaseAvailability();
     });
     container.append(option);
-    if (index === 0) onSelect(value);
   });
+  updatePurchaseAvailability();
+}
+
+function updatePurchaseAvailability() {
+  const unavailable = Number(product?.stock) <= 0;
+  const needsChoice = Boolean((product?.sizes?.length && !selectedSize) || (product?.colors?.length && !selectedColor));
+  $("#add-to-bag").disabled = unavailable || needsChoice;
+  $("#buy-now").disabled = unavailable || needsChoice;
 }
 
 function renderRecommendations(products) {
@@ -102,6 +127,11 @@ function renderRecommendations(products) {
     image.src = (item.images?.[0] || item.image || "");
     image.alt = item.name;
     image.loading = "lazy";
+    image.addEventListener("error", () => {
+      image.removeAttribute("src");
+      image.alt = "الصورة غير متوفرة";
+      anchor.classList.add("image-unavailable");
+    }, { once: true });
     const content = document.createElement("div");
     const name = document.createElement("h3");
     name.textContent = item.name;
@@ -119,7 +149,7 @@ function cartItem() {
 }
 
 function addToBag() {
-  if (Number(product.stock) <= 0) return;
+  if (Number(product.stock) <= 0 || !hasRequiredOptions()) return;
   const cart = getCart();
   const variantKey = `${selectedSize}|${selectedColor}`;
   const existing = cart.find((item) => item.id === product.id && `${item.size || ""}|${item.color || ""}` === variantKey);
@@ -130,15 +160,85 @@ function addToBag() {
   $("#purchase-feedback").textContent = "تزاد المنتج للسلة.";
 }
 
+function hasRequiredOptions() {
+  return (!product.sizes?.length || Boolean(selectedSize)) && (!product.colors?.length || Boolean(selectedColor));
+}
+
 function openCheckout(items, clearCart = false) {
   checkoutItems = items;
   clearCartAfterCheckout = clearCart;
+  renderCartDialog(items, clearCart);
   const total = items.reduce((sum, item) => sum + Number(item.price) * Number(item.quantity || 1), 0);
   $("#checkout-summary").textContent = `${items.reduce((sum, item) => sum + Number(item.quantity || 1), 0)} منتجات · ${formatMoney(total)}`;
   $("#checkout-message").textContent = "";
   $("#checkout-message").className = "form-message";
   $("#checkout-form").reset();
   $("#checkout-dialog").showModal();
+  window.trackStoreEvent?.(config.facebook_pixel_id, "Lead", { content_name: product?.name || "Shopping cart" });
+}
+
+function renderCartDialog(items, isCart) {
+  const container = $("#cart-items");
+  const totalLabel = $("#cart-total");
+  container.replaceChildren();
+  container.hidden = !isCart;
+  totalLabel.hidden = !isCart;
+  const total = items.reduce((sum, item) => sum + Number(item.price) * Number(item.quantity || 1), 0);
+  totalLabel.textContent = `المجموع: ${formatMoney(total)}`;
+  if (!isCart) return;
+  items.forEach((item, index) => {
+    const row = document.createElement("div");
+    row.className = "cart-line";
+    const label = document.createElement("span");
+    label.className = "cart-line-name";
+    label.textContent = `${item.name}${item.size ? ` · ${item.size}` : ""}${item.color ? ` · ${item.color}` : ""}`;
+    const qty = document.createElement("span");
+    qty.className = "cart-line-quantity";
+    qty.textContent = String(item.quantity);
+    const minus = document.createElement("button");
+    minus.type = "button";
+    minus.className = "cart-quantity-button";
+    minus.textContent = "−";
+    minus.setAttribute("aria-label", `نقص الكمية من ${item.name}`);
+    minus.addEventListener("click", () => changeCartQuantity(index, -1));
+    const plus = document.createElement("button");
+    plus.type = "button";
+    plus.className = "cart-quantity-button";
+    plus.textContent = "+";
+    plus.setAttribute("aria-label", `زيد الكمية من ${item.name}`);
+    plus.addEventListener("click", () => changeCartQuantity(index, 1));
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "cart-remove-button";
+    remove.textContent = "حيد";
+    remove.addEventListener("click", () => removeCartItem(index));
+    row.append(label, minus, qty, plus, remove);
+    container.append(row);
+  });
+}
+
+function changeCartQuantity(index, delta) {
+  const cart = getCart();
+  if (!cart[index]) return;
+  const stock = Number((window.productCatalog || []).find((item) => item.id === cart[index].id)?.stock ?? (product.id === cart[index].id ? product.stock : 20));
+  cart[index].quantity = Math.min(stock, Number(cart[index].quantity || 1) + delta);
+  if (cart[index].quantity < 1) cart.splice(index, 1);
+  localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  updateBagCount();
+  checkoutItems = cart;
+  renderCartDialog(cart, true);
+  $("#checkout-summary").textContent = `${cart.length} منتجات · ${formatMoney(cart.reduce((sum, item) => sum + item.price * item.quantity, 0))}`;
+  if (!cart.length) $("#checkout-message").textContent = "السلة ولات فارغة.";
+}
+
+function removeCartItem(index) {
+  const cart = getCart();
+  cart.splice(index, 1);
+  localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  updateBagCount();
+  checkoutItems = cart;
+  renderCartDialog(cart, true);
+  if (!cart.length) $("#checkout-message").textContent = "السلة ولات فارغة.";
 }
 
 function normalizePhone(value) {
@@ -149,20 +249,24 @@ function normalizePhone(value) {
 
 async function submitCheckout(event) {
   event.preventDefault();
+  if (!checkoutItems.length) {
+    $("#checkout-message").textContent = "السلة فارغة، زيد شي منتج قبل ما تصيفط الطلب.";
+    return;
+  }
   const form = new FormData(event.currentTarget);
   if (form.get("website")) return;
   const phone = normalizePhone(String(form.get("phone") || "").trim());
   if (!phone) {
-    $("#checkout-message").textContent = "Enter a valid Moroccan phone number.";
+    $("#checkout-message").textContent = "دخل رقم هاتف مغربي صحيح (مثال: 0612345678).";
     return;
   }
   if (!config.order_endpoint) {
-    $("#checkout-message").textContent = "Checkout is not configured yet. Please try again later.";
+    $("#checkout-message").textContent = "خدمة الطلبات مازال ما تفعّلاتش. عاود المحاولة من بعد.";
     return;
   }
   const submit = $("#submit-checkout");
   submit.disabled = true;
-  submit.textContent = "Sending...";
+  submit.textContent = "كنصيفطو الطلب...";
   try {
     const total = checkoutItems.reduce((sum, item) => sum + Number(item.price) * Number(item.quantity || 1), 0);
     const response = await fetch(new URL("/orders", config.order_endpoint), {
@@ -171,26 +275,27 @@ async function submitCheckout(event) {
       body: JSON.stringify({
         name: String(form.get("name") || "").trim(),
         phone,
-        city: String(form.get("city") || "").trim(),
+        address: String(form.get("address") || "").trim(),
         items: checkoutItems,
         total,
         website: ""
       })
     });
     const result = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(result.error || `Could not submit the order (HTTP ${response.status}).`);
+    if (!response.ok) throw new Error(result.error || "ما قدرناش نصيفطو الطلب. عاود المحاولة من بعد.");
     if (clearCartAfterCheckout) {
       localStorage.removeItem(CART_KEY);
       updateBagCount();
     }
-    $("#checkout-message").textContent = "Order received. We will call to confirm it.";
+    $("#checkout-message").textContent = "وصلنا الطلب ديالك، غادي نتاصلو بيك باش نأكدو.";
     $("#checkout-message").classList.add("success");
+    window.trackStoreEvent?.(config.facebook_pixel_id, "Purchase", { value: total, currency: "MAD" });
     window.setTimeout(() => $("#checkout-dialog").close(), 2200);
   } catch (error) {
-    $("#checkout-message").textContent = error.message || "Connection error. Please try again.";
+    $("#checkout-message").textContent = "وقع مشكل فالإرسال. تأكد من الاتصال بالإنترنت وعاود المحاولة.";
   } finally {
     submit.disabled = false;
-    submit.textContent = "Place order";
+    submit.textContent = "صيفط الطلب";
   }
 }
 
@@ -200,7 +305,7 @@ async function initialize() {
   $("#bag-button").addEventListener("click", () => {
     const bag = getCart();
     if (!bag.length) {
-      $("#purchase-feedback").textContent = "Your bag is empty.";
+      $("#purchase-feedback").textContent = "السلة فارغة.";
       return;
     }
     openCheckout(bag, true);
@@ -224,7 +329,13 @@ async function initialize() {
     product = products.find((item) => item.id === id && item.status !== "draft") || (!id ? products.find((item) => item.status !== "draft") : null);
     if (!product) throw new Error("هاد المنتج ما بقاش متوفر.");
     config = settings;
+    window.productCatalog = products;
     setTheme(settings);
+    if (settings.store_phone) {
+      const phone = settings.store_phone;
+      $("#topbar-phone").href = `tel:${phone.replace(/[^\d+]/g, "")}`;
+      $("#topbar-phone").textContent = phone;
+    }
     const images = Array.isArray(product.images) ? product.images : [product.image].filter(Boolean);
     $("#product-detail").hidden = false;
     $("#product-status").textContent = "";
@@ -238,7 +349,7 @@ async function initialize() {
     $("#gallery-badge").textContent = product.badge || "";
     $("#gallery-badge").hidden = !product.badge;
     const stock = Number(product.stock ?? 1);
-    $("#detail-stock").textContent = stock > 0 ? `متوفر (${stock})` : "غير متوفر حالياً";
+    $("#detail-stock").textContent = stock > 0 ? `متوفر (${stock})` : "غير متوفر";
     $("#detail-stock").classList.toggle("out-of-stock", stock <= 0);
     $("#add-to-bag").disabled = stock <= 0;
     $("#buy-now").disabled = stock <= 0;

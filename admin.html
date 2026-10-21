@@ -28,6 +28,7 @@
       </nav>
       <div class="sidebar-bottom">
         <a href="./">← View storefront</a>
+        <button class="logout-button" data-logout type="button" hidden>Log out</button>
         <small>Static store · GitHub Pages</small>
       </div>
     </aside>
@@ -36,21 +37,17 @@
       <header class="admin-topbar">
         <button class="mobile-menu" id="mobile-menu" type="button" aria-label="Toggle menu">☰</button>
         <div><span class="topbar-kicker">STORE MANAGEMENT</span><h1 id="view-title">Dashboard</h1></div>
-        <span class="connection-indicator" id="connection-indicator">Not connected</span>
+        <div class="topbar-actions"><span class="connection-indicator" id="connection-indicator">Not connected</span><button class="logout-button" data-logout type="button" hidden>Log out</button></div>
       </header>
 
       <section class="admin-panel connection-panel" id="connection-panel" aria-labelledby="connection-title">
-        <div class="panel-heading"><div><span class="section-kicker">FIRST STEP</span><h2 id="connection-title">Connect your services</h2></div></div>
-        <form id="connection-form" class="connection-form">
-          <label>GitHub repository <input id="repository" name="repository" placeholder="owner/repository" autocomplete="url" required></label>
-          <label>Branch <input id="branch" name="branch" value="main" required></label>
-          <label>GitHub fine-grained token <input id="github-token" name="token" type="password" autocomplete="off" required></label>
-          <label>Worker endpoint <input id="worker-endpoint" name="endpoint" type="url" placeholder="https://orders.example.workers.dev" required></label>
-          <label>Admin API key <input id="admin-key" name="adminKey" type="password" autocomplete="off" required></label>
-          <button class="button button-primary" id="connect-button" type="submit">Connect</button>
-          <p class="security-note">Tokens stay in this tab's memory only. Use a fine-grained token limited to this repository with Contents read/write.</p>
+        <div class="panel-heading"><div><span class="section-kicker">SECURE ADMIN ACCESS</span><h2 id="connection-title">Sign in to your store</h2></div></div>
+        <form id="login-form" class="connection-form">
+          <label>Email <input id="login-email" name="email" type="email" autocomplete="username" required></label>
+          <label>Password <input id="login-password" name="password" type="password" autocomplete="current-password" required></label>
+          <div class="login-actions"><button class="button button-primary" id="login-button" type="submit">Log in</button><button class="button button-secondary" id="retry-session" type="button" hidden>Retry</button></div>
         </form>
-        <p class="admin-message" id="connection-message" role="status"></p>
+        <p class="admin-message" id="connection-message" role="status" aria-live="polite"></p>
       </section>
 
       <div class="admin-workspace" id="admin-workspace" hidden>
@@ -96,6 +93,7 @@
               <label>Font family<input name="font_family" id="setting-font" maxlength="100" placeholder="system-ui, sans-serif"></label>
               <label>Logo URL<input name="logo_url" id="setting-logo" type="url" placeholder="https://..."></label>
               <label>Store phone<input name="store_phone" id="setting-phone" type="tel"></label>
+              <label>Facebook Pixel ID<input name="facebook_pixel_id" id="setting-pixel" maxlength="40"></label>
             </div>
             <label>Slider slides (JSON array: image, title, description)<textarea id="setting-slides" rows="8" spellcheck="false"></textarea></label>
             <p class="admin-message" id="settings-message" role="status"></p>

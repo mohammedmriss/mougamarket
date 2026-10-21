@@ -1,199 +1,75 @@
 const $ = (selector) => document.querySelector(selector);
-const connectionForm = $("#connection-form");
-const workspace = $("#admin-workspace");
-const views = [...document.querySelectorAll(".admin-view")];
-const productForm = $("#product-form");
-const editor = $("#product-editor");
-const PRODUCTS_PATH = "data/products.json";
-const CONFIG_PATH = "data/config.json";
-const API_ROOT = "https://api.github.com";
+const TOKEN_KEY = "mougamarket-admin-session";
 const PAGE_SIZE = 8;
-
-let githubToken = "";
-let repository = "";
-let branch = "main";
+const views = [...document.querySelectorAll(".admin-view")];
+const editor = $("#product-editor");
 let workerEndpoint = "";
-let adminKey = "";
+let token = localStorage.getItem(TOKEN_KEY) || "";
 let products = [];
 let config = {};
 let orders = [];
-let fileShas = {};
+let shas = {};
 let currentPage = 1;
-let activeView = "dashboard";
 
 function message(target, text, type = "") {
   target.textContent = text;
   target.className = `admin-message${type ? ` ${type}` : ""}`;
 }
 
-function encodeBase64(text) {
-  const bytes = new TextEncoder().encode(text);
-  let binary = "";
-  bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
-  return btoa(binary);
+function sessionExpired(text = "Your session expired. Please log in again.") {
+  token = "";
+  localStorage.removeItem(TOKEN_KEY);
+  $("#admin-workspace").hidden = true;
+  $("#connection-panel").hidden = false;
+  document.querySelectorAll("[data-logout]").forEach((button) => { button.hidden = true; });
+  $("#connection-title").textContent = "Sign in to your store";
+  message($("#connection-message"), text, "error");
 }
 
-function decodeBase64(text) {
-  const bytes = Uint8Array.from(atob(text.replace(/\s/g, "")), (char) => char.charCodeAt(0));
-  return new TextDecoder().decode(bytes);
-}
-
-function githubFileUrl(path) {
-  const [owner, repo] = repository.split("/");
-  return `${API_ROOT}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${path}`;
-}
-
-async function githubRequest(url, options = {}) {
-  const response = await fetch(url, {
+async function workerRequest(path, options = {}) {
+  const response = await fetch(new URL(path, workerEndpoint), {
     ...options,
     headers: {
-      Accept: "application/vnd.github+json",
-      Authorization: `Bearer ${githubToken}`,
-      "X-GitHub-Api-Version": "2022-11-28",
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers
     }
   });
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(body.message || `GitHub API error (${response.status}).`);
-  return body;
-}
-
-async function readGitHubFile(path) {
-  const file = await githubRequest(`${githubFileUrl(path)}?ref=${encodeURIComponent(branch)}`);
-  if (file.encoding !== "base64" || !file.content) throw new Error(`Could not read ${path} from GitHub.`);
-  fileShas[path] = file.sha;
-  return JSON.parse(decodeBase64(file.content));
-}
-
-async function saveGitHubFile(path, value, summary) {
-  const saved = await githubRequest(githubFileUrl(path), {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      message: summary,
-      content: encodeBase64(`${JSON.stringify(value, null, 2)}\n`),
-      sha: fileShas[path],
-      branch
-    })
-  });
-  if (!saved.content?.sha) throw new Error(`GitHub did not confirm saving ${path}.`);
-  fileShas[path] = saved.content.sha;
-}
-
-function workerUrl(path) {
-  return new URL(path, workerEndpoint).toString();
-}
-
-async function workerRequest(path, options = {}) {
-  let response;
-  try {
-    response = await fetch(workerUrl(path), {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        "X-Admin-Key": adminKey,
-        ...options.headers
-      }
-    });
-  } catch (error) {
-    if (error instanceof TypeError) {
-      throw new Error("Could not reach the Worker. Check its URL and redeploy its CORS settings to allow this site and the X-Admin-Key request header.");
-    }
-    throw error;
+  if (response.status === 401) {
+    sessionExpired("Your session expired. Please log in again.");
+    throw new Error("Session expired.");
   }
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(body.error || `Order service error (${response.status}).`);
+  if (!response.ok) throw new Error(body.error || `Request failed (${response.status}).`);
   return body;
 }
 
-function navigate(viewName) {
-  activeView = viewName;
-  if (viewName !== "products") editor.hidden = true;
-  views.forEach((view) => view.classList.toggle("active", view.dataset.panel === viewName));
-  document.querySelectorAll("[data-view]").forEach((button) => button.classList.toggle("active", button.dataset.view === viewName));
-  const titles = { dashboard: "Dashboard", products: "Product List", categories: "Categories", orders: "Sales / Orders", analytics: "Analytics", settings: "Settings" };
-  $("#view-title").textContent = titles[viewName] || "Dashboard";
-  if (viewName === "orders" || viewName === "dashboard" || viewName === "analytics") refreshOrders();
-  if (viewName === "categories") renderCategories();
-  if (viewName === "settings") fillSettings();
-  $("#admin-workspace").scrollIntoView({ block: "start", behavior: "smooth" });
-  $(".admin-shell").classList.remove("menu-open");
+async function loadContent(name) {
+  const result = await workerRequest(`/admin/content/${name}`);
+  shas[name] = result.sha;
+  return result.value;
 }
 
-function normalizedProduct(product) {
-  const images = Array.isArray(product.images) ? product.images : [product.image].filter(Boolean);
-  return {
-    ...product,
-    category: String(product.category || "Uncategorized"),
-    stock: Number.isInteger(product.stock) ? product.stock : 0,
-    status: product.status === "draft" ? "draft" : "active",
-    images,
-    image: images[0] || product.image || "",
-    sizes: Array.isArray(product.sizes) ? product.sizes : [],
-    colors: Array.isArray(product.colors) ? product.colors : []
-  };
-}
-
-function renderProducts() {
-  const tbody = $("#products-table");
-  tbody.replaceChildren();
-  const query = $("#product-search").value.trim().toLocaleLowerCase();
-  const category = $("#product-category-filter").value;
-  const filtered = products.map(normalizedProduct).filter((product) =>
-    (!query || `${product.name} ${product.category}`.toLocaleLowerCase().includes(query)) &&
-    (!category || product.category === category)
-  );
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  currentPage = Math.min(currentPage, pageCount);
-  const start = (currentPage - 1) * PAGE_SIZE;
-  filtered.slice(start, start + PAGE_SIZE).forEach((product) => {
-    const row = document.createElement("tr");
-    const nameCell = document.createElement("td");
-    const productInfo = document.createElement("div");
-    productInfo.className = "table-product";
-    const image = document.createElement("img");
-    image.src = product.image;
-    image.alt = "";
-    image.loading = "lazy";
-    image.addEventListener("error", () => image.removeAttribute("src"), { once: true });
-    const info = document.createElement("div");
-    const name = document.createElement("strong");
-    name.textContent = product.name;
-    const id = document.createElement("small");
-    id.textContent = product.id;
-    info.append(name, id);
-    productInfo.append(image, info);
-    nameCell.append(productInfo);
-    row.append(nameCell, cell(product.category), cell(`${product.price} MAD`), cell(String(product.stock)));
-    const statusCell = document.createElement("td");
-    const badge = document.createElement("span");
-    badge.className = `status-badge ${product.status}`;
-    badge.textContent = product.status === "active" ? "Active" : "Draft";
-    statusCell.append(badge);
-    row.append(statusCell);
-    const actions = document.createElement("td");
-    const actionGroup = document.createElement("div");
-    actionGroup.className = "row-actions";
-    const edit = button("Edit", () => editProduct(product.id));
-    const remove = button("Delete", () => deleteProduct(product.id), "delete-action");
-    actionGroup.append(edit, remove);
-    actions.append(actionGroup);
-    row.append(actions);
-    tbody.append(row);
+async function saveContent(name, value) {
+  const result = await workerRequest(`/admin/content/${name}`, {
+    method: "PUT",
+    body: JSON.stringify({ value, sha: shas[name] })
   });
-  if (!filtered.length) tbody.append(emptyRow(6, "No products match your search."));
-  $("#pagination-summary").textContent = filtered.length ? `Showing ${start + 1}–${Math.min(start + PAGE_SIZE, filtered.length)} of ${filtered.length}` : "No products";
-  $("#page-number").textContent = `${currentPage} / ${pageCount}`;
-  $("#page-previous").disabled = currentPage <= 1;
-  $("#page-next").disabled = currentPage >= pageCount;
-  updateCategoryFilter();
-  updateProductStats();
+  shas[name] = result.sha;
 }
 
-function cell(text) {
+function cell(value) {
   const td = document.createElement("td");
-  td.textContent = text;
+  td.textContent = String(value ?? "");
   return td;
+}
+
+function emptyRow(span, text) {
+  const row = document.createElement("tr");
+  const item = cell(text);
+  item.colSpan = span;
+  row.append(item);
+  return row;
 }
 
 function button(text, action, className = "") {
@@ -205,12 +81,21 @@ function button(text, action, className = "") {
   return item;
 }
 
-function emptyRow(span, text) {
-  const row = document.createElement("tr");
-  const td = cell(text);
-  td.colSpan = span;
-  row.append(td);
-  return row;
+function normalizedProduct(source) {
+  const images = Array.isArray(source.images) ? source.images : [source.image].filter(Boolean);
+  return {
+    ...source,
+    id: String(source.id || ""),
+    name: String(source.name || ""),
+    category: String(source.category || "Uncategorized"),
+    price: Number(source.price) || 0,
+    stock: Number.isInteger(Number(source.stock)) ? Number(source.stock) : 0,
+    status: source.status === "draft" ? "draft" : "active",
+    images,
+    image: images[0] || "",
+    sizes: Array.isArray(source.sizes) ? source.sizes : [],
+    colors: Array.isArray(source.colors) ? source.colors : []
+  };
 }
 
 function updateCategoryFilter() {
@@ -221,31 +106,80 @@ function updateCategoryFilter() {
   filter.value = categories.includes(current) ? current : "";
 }
 
-function updateProductStats() {
+function renderProducts() {
+  const tbody = $("#products-table");
+  tbody.replaceChildren();
+  const query = $("#product-search").value.trim().toLocaleLowerCase();
+  const category = $("#product-category-filter").value;
+  const filtered = products.map(normalizedProduct).filter((product) =>
+    (!query || `${product.name} ${product.category}`.toLocaleLowerCase().includes(query)) &&
+    (!category || product.category === category)
+  );
+  const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  currentPage = Math.min(currentPage, pages);
+  const start = (currentPage - 1) * PAGE_SIZE;
+  filtered.slice(start, start + PAGE_SIZE).forEach((product) => {
+    const row = document.createElement("tr");
+    const nameCell = document.createElement("td");
+    const info = document.createElement("div");
+    info.className = "table-product";
+    const image = document.createElement("img");
+    image.src = product.image;
+    image.alt = "";
+    image.loading = "lazy";
+    image.addEventListener("error", () => image.removeAttribute("src"), { once: true });
+    const text = document.createElement("div");
+    const name = document.createElement("strong");
+    name.textContent = product.name;
+    const id = document.createElement("small");
+    id.textContent = product.id;
+    text.append(name, id);
+    info.append(image, text);
+    nameCell.append(info);
+    row.append(nameCell, cell(product.category), cell(`${product.price} MAD`), cell(product.stock));
+    const statusCell = document.createElement("td");
+    const status = document.createElement("span");
+    status.className = `status-badge ${product.status}`;
+    status.textContent = product.status;
+    statusCell.append(status);
+    row.append(statusCell);
+    const actions = document.createElement("td");
+    const group = document.createElement("div");
+    group.className = "row-actions";
+    group.append(button("Edit", () => editProduct(product.id)), button("Delete", () => deleteProduct(product.id), "delete-action"));
+    actions.append(group);
+    row.append(actions);
+    tbody.append(row);
+  });
+  if (!filtered.length) tbody.append(emptyRow(6, "No products match your search."));
+  $("#pagination-summary").textContent = filtered.length ? `Showing ${start + 1}–${Math.min(start + PAGE_SIZE, filtered.length)} of ${filtered.length}` : "No products";
+  $("#page-number").textContent = `${currentPage} / ${pages}`;
+  $("#page-previous").disabled = currentPage <= 1;
+  $("#page-next").disabled = currentPage >= pages;
+  updateCategoryFilter();
   $("#stat-products").textContent = String(products.length);
-  $("#stat-active").textContent = String(products.filter((p) => normalizedProduct(p).status === "active").length);
+  $("#stat-active").textContent = String(products.filter((item) => item.status !== "draft").length);
 }
 
 function renderCategories() {
-  const categoryMap = new Map();
+  const counts = new Map();
   products.forEach((item) => {
-    const product = normalizedProduct(item);
-    categoryMap.set(product.category, (categoryMap.get(product.category) || 0) + 1);
+    const category = normalizedProduct(item).category;
+    counts.set(category, (counts.get(category) || 0) + 1);
   });
   const grid = $("#categories-grid");
   grid.replaceChildren();
-  [...categoryMap.entries()].sort(([a], [b]) => a.localeCompare(b)).forEach(([name, count]) => {
+  [...counts.entries()].sort(([a], [b]) => a.localeCompare(b)).forEach(([name, count]) => {
     const card = document.createElement("article");
     card.className = "category-card";
-    const heading = document.createElement("strong");
-    heading.textContent = name;
-    const total = document.createElement("span");
-    total.textContent = `${count} product${count === 1 ? "" : "s"}`;
-    card.append(heading, total);
+    const title = document.createElement("strong");
+    title.textContent = name;
+    const number = document.createElement("span");
+    number.textContent = `${count} product${count === 1 ? "" : "s"}`;
+    card.append(title, number);
     grid.append(card);
   });
-  if (!categoryMap.size) message($("#categories-message"), "Categories appear when you add products.");
-  else message($("#categories-message"), "");
+  message($("#categories-message"), counts.size ? "" : "Categories appear when you add products.");
 }
 
 function editProduct(id) {
@@ -269,84 +203,50 @@ function editProduct(id) {
 }
 
 function resetProductForm() {
-  productForm.reset();
+  $("#product-form").reset();
   $("#product-id").value = "";
   $("#editor-title").textContent = "Add product";
   message($("#editor-message"), "");
 }
 
-function openNewProduct() {
-  resetProductForm();
-  editor.hidden = false;
-  editor.scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
-async function deleteProduct(id) {
-  const product = products.find((item) => item.id === id);
-  if (!product || !window.confirm(`Delete "${product.name}" from the catalog?`)) return;
-  const previous = products;
-  products = products.filter((item) => item.id !== id);
-  try {
-    await saveGitHubFile(PRODUCTS_PATH, products, `Delete product: ${product.name}`);
-    renderProducts();
-    message($("#products-message"), "Product deleted and saved to GitHub.", "success");
-  } catch (error) {
-    products = previous;
-    renderProducts();
-    message($("#products-message"), error.message, "error");
-  }
-}
-
-function fillSettings() {
-  $("#setting-store-name").value = config.store_name || "";
-  $("#setting-announcement").value = config.announcement_text || "";
-  $("#setting-primary-color").value = /^#[0-9a-f]{6}$/i.test(config.theme?.primary_color || "") ? config.theme.primary_color : "#2563eb";
-  $("#setting-font").value = config.theme?.font_family || "system-ui, sans-serif";
-  $("#setting-logo").value = config.logo_url || "";
-  $("#setting-phone").value = config.store_phone || "";
-  $("#setting-slides").value = JSON.stringify(config.slider_images || [], null, 2);
+function showView(name) {
+  views.forEach((item) => item.classList.toggle("active", item.dataset.panel === name));
+  document.querySelectorAll("[data-view]").forEach((item) => item.classList.toggle("active", item.dataset.view === name));
+  const titles = { dashboard: "Dashboard", products: "Product List", categories: "Categories", orders: "Sales / Orders", analytics: "Analytics", settings: "Settings" };
+  $("#view-title").textContent = titles[name] || "Dashboard";
+  if (name === "categories") renderCategories();
+  if (name === "settings") fillSettings();
+  if (name === "orders" || name === "dashboard" || name === "analytics") refreshOrders();
+  $(".admin-shell").classList.remove("menu-open");
 }
 
 function renderOrders() {
-  const statusFilter = $("#order-status-filter").value;
-  const filtered = orders.filter((order) => !statusFilter || order.status === statusFilter);
+  const selection = $("#order-status-filter").value;
+  const list = orders.filter((order) => !selection || order.status === selection);
   const tbody = $("#orders-table");
   tbody.replaceChildren();
-  filtered.forEach((order) => {
+  list.forEach((order) => {
     const row = document.createElement("tr");
-    row.append(cell(order.id || ""), cell(order.name || ""), cell(`${order.phone || ""} / ${order.city || ""}`), cell(order.itemsSummary || order.product || ""), cell(`${order.total || order.price || 0} MAD`));
-    const status = document.createElement("td");
+    row.append(cell(String(order.id || "").slice(0, 8)), cell(order.name), cell(`${order.phone || ""} / ${order.city || ""}`), cell(order.itemsSummary), cell(`${order.total || 0} MAD`));
+    const statusCell = document.createElement("td");
     const badge = document.createElement("span");
     badge.className = `status-badge ${order.status || "new"}`;
     badge.textContent = order.status || "new";
-    status.append(badge);
-    row.append(status);
+    statusCell.append(badge);
+    row.append(statusCell);
     const updateCell = document.createElement("td");
     const select = document.createElement("select");
     select.className = "order-status-select";
-    ["new", "confirmed", "shipped", "delivered", "cancelled"].forEach((value) => select.add(new Option(value, value)));
+    ["new", "confirmed", "shipped", "delivered", "cancelled"].forEach((status) => select.add(new Option(status, status)));
     select.value = order.status || "new";
     select.addEventListener("change", () => updateOrderStatus(order.id, select.value, select));
     updateCell.append(select);
     row.append(updateCell);
     tbody.append(row);
   });
-  if (!filtered.length) tbody.append(emptyRow(7, "No orders yet."));
+  if (!list.length) tbody.append(emptyRow(7, "No orders yet."));
   renderDashboardOrders();
   renderAnalytics();
-}
-
-async function refreshOrders() {
-  if (!workerEndpoint || !adminKey) return;
-  message($("#orders-message"), "Loading orders...");
-  try {
-    const result = await workerRequest("/admin/orders");
-    orders = Array.isArray(result.orders) ? result.orders : [];
-    renderOrders();
-    message($("#orders-message"), `${orders.length} orders loaded.`, "success");
-  } catch (error) {
-    message($("#orders-message"), error.message, "error");
-  }
 }
 
 function renderDashboardOrders() {
@@ -354,7 +254,7 @@ function renderDashboardOrders() {
   tbody.replaceChildren();
   orders.slice(0, 5).forEach((order) => {
     const row = document.createElement("tr");
-    row.append(cell(order.id || ""), cell(order.name || ""), cell(order.itemsSummary || order.product || ""), cell(`${order.total || order.price || 0} MAD`));
+    row.append(cell(String(order.id || "").slice(0, 8)), cell(order.name), cell(order.itemsSummary), cell(`${order.total || 0} MAD`));
     const statusCell = document.createElement("td");
     const badge = document.createElement("span");
     badge.className = `status-badge ${order.status || "new"}`;
@@ -367,192 +267,239 @@ function renderDashboardOrders() {
 }
 
 function renderAnalytics() {
-  const completedOrders = orders.filter((order) => order.status !== "cancelled");
-  const revenue = completedOrders.reduce((sum, order) => sum + Number(order.total || order.price || 0), 0);
+  const validOrders = orders.filter((order) => order.status !== "cancelled");
+  const revenue = validOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
   $("#stat-orders").textContent = String(orders.length);
   $("#stat-sales").textContent = `${revenue.toFixed(2)} MAD`;
   $("#analytics-orders").textContent = String(orders.length);
   $("#analytics-revenue").textContent = `${revenue.toFixed(2)} MAD`;
-  $("#analytics-average").textContent = `${(completedOrders.length ? revenue / completedOrders.length : 0).toFixed(2)} MAD`;
+  $("#analytics-average").textContent = `${(validOrders.length ? revenue / validOrders.length : 0).toFixed(2)} MAD`;
   $("#analytics-pending").textContent = String(orders.filter((order) => ["new", "confirmed"].includes(order.status)).length);
-  const sold = new Map();
-  orders.filter((order) => order.status !== "cancelled").forEach((order) => {
-    (order.items || []).forEach((item) => sold.set(item.name, (sold.get(item.name) || 0) + Number(item.quantity || 1)));
-  });
-  const list = $("#best-sellers");
-  list.replaceChildren();
-  [...sold.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).forEach(([name, count]) => {
+  const sales = new Map();
+  validOrders.forEach((order) => (order.items || []).forEach((item) => sales.set(item.name, (sales.get(item.name) || 0) + Number(item.quantity || 1))));
+  const root = $("#best-sellers");
+  root.replaceChildren();
+  [...sales.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).forEach(([name, amount]) => {
     const row = document.createElement("div");
     row.className = "best-seller-row";
-    const productName = document.createElement("span");
-    productName.textContent = name;
-    const units = document.createElement("span");
-    units.textContent = `${count} sold`;
-    row.append(productName, units);
-    list.append(row);
+    const label = document.createElement("span");
+    label.textContent = name;
+    const count = document.createElement("strong");
+    count.textContent = String(amount);
+    row.append(label, count);
+    root.append(row);
   });
-  if (!sold.size) list.textContent = "Sales data will appear after orders arrive.";
 }
 
-async function updateOrderStatus(orderId, status, select) {
+async function refreshOrders() {
+  message($("#orders-message"), "Loading orders...");
+  try {
+    const result = await workerRequest("/admin/orders");
+    orders = Array.isArray(result.orders) ? result.orders : [];
+    renderOrders();
+    message($("#orders-message"), `${orders.length} orders loaded.`, "success");
+  } catch (error) {
+    if (token) message($("#orders-message"), error.message, "error");
+  }
+}
+
+async function updateOrderStatus(id, status, select) {
   select.disabled = true;
   try {
-    await workerRequest("/admin/orders", { method: "PATCH", body: JSON.stringify({ orderId, status }) });
-    const order = orders.find((item) => item.id === orderId);
+    await workerRequest("/admin/orders", { method: "PATCH", body: JSON.stringify({ orderId: id, status }) });
+    const order = orders.find((item) => item.id === id);
     if (order) order.status = status;
     renderOrders();
     message($("#orders-message"), "Order status updated.", "success");
   } catch (error) {
-    select.value = orders.find((item) => item.id === orderId)?.status || "new";
     message($("#orders-message"), error.message, "error");
   } finally {
     select.disabled = false;
   }
 }
 
-connectionForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const repoValue = $("#repository").value.trim();
-  if (!/^[^/\s]+\/[^/\s]+$/.test(repoValue)) {
-    message($("#connection-message"), "Use the owner/repository format.", "error");
-    return;
-  }
-  repository = repoValue;
-  branch = $("#branch").value.trim();
-  githubToken = $("#github-token").value.trim();
-  workerEndpoint = $("#worker-endpoint").value.trim();
-  adminKey = $("#admin-key").value.trim();
-  $("#github-token").value = "";
-  $("#admin-key").value = "";
-  $("#connect-button").disabled = true;
-  message($("#connection-message"), "Connecting to GitHub and the orders service...");
+function fillSettings() {
+  $("#setting-store-name").value = config.store_name || "";
+  $("#setting-announcement").value = config.announcement_text || "";
+  $("#setting-primary-color").value = /^#[0-9a-f]{6}$/i.test(config.theme?.primary_color || "") ? config.theme.primary_color : "#2563eb";
+  $("#setting-font").value = config.theme?.font_family || "system-ui, sans-serif";
+  $("#setting-logo").value = config.logo_url || "";
+  $("#setting-phone").value = config.store_phone || "";
+  $("#setting-pixel").value = config.facebook_pixel_id || "";
+  $("#setting-slides").value = JSON.stringify(config.slider_images || [], null, 2);
+}
+
+async function deleteProduct(id) {
+  const product = products.find((item) => item.id === id);
+  if (!product || !confirm(`Delete "${product.name}" from the catalog?`)) return;
+  const previous = products;
+  products = products.filter((item) => item.id !== id);
   try {
-    const [loadedProducts, loadedConfig, loadedOrders] = await Promise.all([
-      readGitHubFile(PRODUCTS_PATH),
-      readGitHubFile(CONFIG_PATH),
-      workerRequest("/admin/orders")
-    ]);
-    if (!Array.isArray(loadedProducts) || !loadedConfig || typeof loadedConfig !== "object") throw new Error("Store data has an invalid format.");
-    products = loadedProducts;
-    config = loadedConfig;
-    orders = Array.isArray(loadedOrders.orders) ? loadedOrders.orders : [];
-    workspace.hidden = false;
-    $("#connection-indicator").textContent = "Connected";
-    $("#connection-indicator").classList.add("connected");
-    $("#connection-panel").hidden = true;
+    await saveContent("products", products);
     renderProducts();
-    renderOrders();
-    message($("#connection-message"), "Connected successfully.", "success");
-    navigate("dashboard");
+    message($("#products-message"), "Product deleted and saved.", "success");
   } catch (error) {
-    githubToken = "";
-    adminKey = "";
-    message($("#connection-message"), error.message, "error");
+    products = previous;
+    renderProducts();
+    message($("#products-message"), error.message, "error");
+  }
+}
+
+async function loadWorkspace() {
+  const [loadedProducts, loadedConfig] = await Promise.all([loadContent("products"), loadContent("config")]);
+  if (!Array.isArray(loadedProducts)) throw new Error("The products file has an invalid format.");
+  products = loadedProducts;
+  config = loadedConfig;
+  $("#connection-panel").hidden = true;
+  $("#admin-workspace").hidden = false;
+  document.querySelectorAll("[data-logout]").forEach((button) => { button.hidden = false; });
+  $("#connection-indicator").textContent = "Connected";
+  $("#connection-indicator").classList.add("connected");
+  renderProducts();
+  fillSettings();
+  await refreshOrders();
+}
+
+async function establishSession() {
+  try {
+    const result = await workerRequest("/admin/me");
+    token = result.token;
+    localStorage.setItem(TOKEN_KEY, token);
+    await loadWorkspace();
+  } catch (error) {
+    if (!token) return;
+    if (/Session expired/.test(error.message)) return;
+    $("#connection-panel").hidden = false;
+    $("#admin-workspace").hidden = true;
+    $("#retry-session").hidden = false;
+    message($("#connection-message"), "Network unavailable. Your session is saved; retry when online.", "error");
+  }
+}
+
+async function loadEndpoint() {
+  const response = await fetch("data/config.json", { cache: "no-cache" });
+  if (!response.ok) throw new Error("Could not load the store configuration.");
+  const settings = await response.json();
+  if (!settings.order_endpoint) throw new Error("The Worker endpoint is not configured.");
+  workerEndpoint = settings.order_endpoint;
+}
+
+$("#login-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const submit = $("#login-button");
+  submit.disabled = true;
+  message($("#connection-message"), "");
+  try {
+    const response = await fetch(new URL("/admin/login", workerEndpoint), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: $("#login-email").value.trim(), password: $("#login-password").value })
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.error || "Login failed.");
+    token = result.token;
+    localStorage.setItem(TOKEN_KEY, token);
+    $("#login-password").value = "";
+    await loadWorkspace();
+  } catch (error) {
+    message($("#connection-message"), error.message || "Network unavailable. Try again.", "error");
   } finally {
-    $("#connect-button").disabled = false;
+    submit.disabled = false;
   }
 });
 
-productForm.addEventListener("submit", async (event) => {
+document.querySelectorAll("[data-logout]").forEach((button) => button.addEventListener("click", () => sessionExpired("You have been logged out.")));
+$("#retry-session").addEventListener("click", establishSession);
+document.querySelectorAll("[data-view]").forEach((button) => button.addEventListener("click", () => showView(button.dataset.view)));
+document.querySelectorAll("[data-open-view]").forEach((button) => button.addEventListener("click", () => showView(button.dataset.openView)));
+$("#mobile-menu").addEventListener("click", () => $(".admin-shell").classList.toggle("menu-open"));
+$("#product-search").addEventListener("input", () => { currentPage = 1; renderProducts(); });
+$("#product-category-filter").addEventListener("change", () => { currentPage = 1; renderProducts(); });
+$("#page-previous").addEventListener("click", () => { currentPage -= 1; renderProducts(); });
+$("#page-next").addEventListener("click", () => { currentPage += 1; renderProducts(); });
+$("#new-product").addEventListener("click", () => { resetProductForm(); editor.hidden = false; editor.scrollIntoView({ behavior: "smooth" }); });
+$("#close-editor").addEventListener("click", () => { editor.hidden = true; });
+$("#cancel-edit").addEventListener("click", () => { editor.hidden = true; });
+$("#refresh-orders").addEventListener("click", refreshOrders);
+$("#order-status-filter").addEventListener("change", renderOrders);
+
+$("#product-form").addEventListener("submit", async (event) => {
   event.preventDefault();
-  const oldId = $("#product-id").value;
-  const name = $("#product-name").value.trim();
-  const category = $("#product-category").value.trim();
-  const price = Number($("#product-price").value);
-  const stock = Number($("#product-stock").value);
+  const id = $("#product-id").value.trim() || crypto.randomUUID();
   const images = $("#product-images").value.split(/\r?\n/).map((value) => value.trim()).filter(Boolean);
-  const description = $("#product-description").value.trim();
-  if (!name || !category || !description || !Number.isFinite(price) || price <= 0 || !Number.isInteger(stock) || stock < 0 || !images.length) {
-    message($("#editor-message"), "Check the required fields, price, stock and at least one image.", "error");
-    return;
-  }
-  if (images.some((value) => {
-    try { return !["https:", "http:"].includes(new URL(value).protocol); } catch { return true; }
-  })) {
-    message($("#editor-message"), "Each image must use an http:// or https:// URL.", "error");
-    return;
-  }
-  const id = oldId || `product-${crypto.randomUUID()}`;
   const product = {
-    id, name, category, price, stock, status: $("#product-status").value,
+    id,
+    name: $("#product-name").value.trim(),
+    category: $("#product-category").value.trim(),
+    price: Number($("#product-price").value),
+    stock: Number($("#product-stock").value),
+    status: $("#product-status").value,
     badge: $("#product-badge").value.trim(),
+    images,
+    image: images[0] || "",
     sizes: $("#product-sizes").value.split(",").map((value) => value.trim()).filter(Boolean),
     colors: $("#product-colors").value.split(",").map((value) => value.trim()).filter(Boolean),
-    images, image: images[0], description
+    description: $("#product-description").value.trim()
   };
-  const oldProducts = products;
-  products = oldId ? products.map((item) => item.id === oldId ? product : item) : [...products, product];
-  $("#save-product").disabled = true;
-  message($("#editor-message"), "Saving product to GitHub...");
+  const previous = products;
+  const index = products.findIndex((item) => item.id === id);
+  products = [...products];
+  if (index < 0) products.push(product);
+  else products[index] = product;
   try {
-    await saveGitHubFile(PRODUCTS_PATH, products, `${oldId ? "Update" : "Add"} product: ${name}`);
+    await saveContent("products", products);
     renderProducts();
-    renderCategories();
     editor.hidden = true;
-    resetProductForm();
-    message($("#products-message"), "Product saved. GitHub Pages will update shortly.", "success");
+    message($("#products-message"), "Product saved.", "success");
   } catch (error) {
-    products = oldProducts;
-    renderProducts();
+    products = previous;
     message($("#editor-message"), error.message, "error");
-  } finally {
-    $("#save-product").disabled = false;
   }
 });
 
 $("#settings-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   let slides;
-  try {
-    slides = JSON.parse($("#setting-slides").value || "[]");
-    if (!Array.isArray(slides) || slides.some((slide) => !slide || typeof slide !== "object" || Array.isArray(slide))) throw new Error();
-  } catch {
-    message($("#settings-message"), "Slides must be a valid JSON array of objects.", "error");
+  try { slides = JSON.parse($("#setting-slides").value || "[]"); } catch {
+    message($("#settings-message"), "Slides must be valid JSON.", "error");
     return;
   }
-  const logo = $("#setting-logo").value.trim();
-  if (logo && !/^https?:\/\//i.test(logo)) {
-    message($("#settings-message"), "Logo URL must start with https:// or http://.", "error");
+  if (!Array.isArray(slides)) {
+    message($("#settings-message"), "Slides must be a JSON array.", "error");
     return;
   }
-  const previous = config;
-  config = {
+  const updated = {
     ...config,
     store_name: $("#setting-store-name").value.trim(),
     announcement_text: $("#setting-announcement").value.trim(),
+    logo_url: $("#setting-logo").value.trim(),
     store_phone: $("#setting-phone").value.trim(),
-    logo_url: logo,
-    theme: {
-      ...(config.theme || {}),
-      primary_color: $("#setting-primary-color").value,
-      font_family: $("#setting-font").value.trim() || "system-ui, sans-serif"
-    },
+    facebook_pixel_id: $("#setting-pixel").value.trim(),
+    theme: { ...(config.theme || {}), primary_color: $("#setting-primary-color").value, font_family: $("#setting-font").value.trim() },
     slider_images: slides
   };
-  $("#save-settings").disabled = true;
-  message($("#settings-message"), "Saving settings to GitHub...");
   try {
-    await saveGitHubFile(CONFIG_PATH, config, "Update storefront settings");
-    document.documentElement.style.setProperty("--green", config.theme.primary_color);
+    await saveContent("config", updated);
+    config = updated;
     message($("#settings-message"), "Settings saved to GitHub.", "success");
   } catch (error) {
-    config = previous;
     message($("#settings-message"), error.message, "error");
-  } finally {
-    $("#save-settings").disabled = false;
   }
 });
 
-document.querySelectorAll("[data-view]").forEach((button) => button.addEventListener("click", () => navigate(button.dataset.view)));
-document.querySelectorAll("[data-open-view]").forEach((button) => button.addEventListener("click", () => navigate(button.dataset.openView)));
-$("#new-product").addEventListener("click", openNewProduct);
-$("#close-editor").addEventListener("click", () => { editor.hidden = true; });
-$("#cancel-edit").addEventListener("click", () => { editor.hidden = true; resetProductForm(); });
-$("#product-search").addEventListener("input", () => { currentPage = 1; renderProducts(); });
-$("#product-category-filter").addEventListener("change", () => { currentPage = 1; renderProducts(); });
-$("#page-previous").addEventListener("click", () => { currentPage = Math.max(1, currentPage - 1); renderProducts(); });
-$("#page-next").addEventListener("click", () => { currentPage += 1; renderProducts(); });
-$("#order-status-filter").addEventListener("change", renderOrders);
-$("#refresh-orders").addEventListener("click", refreshOrders);
-$("#mobile-menu").addEventListener("click", () => $(".admin-shell").classList.toggle("menu-open"));
-window.addEventListener("pagehide", () => { githubToken = ""; adminKey = ""; });
+(async function initialize() {
+  try {
+    await loadEndpoint();
+    if (token) {
+      $("#retry-session").hidden = true;
+      await establishSession();
+    } else {
+      $("#connection-panel").hidden = false;
+      $("#admin-workspace").hidden = true;
+    }
+  } catch (error) {
+    $("#connection-panel").hidden = false;
+    $("#retry-session").hidden = false;
+    message($("#connection-message"), error.message, "error");
+  }
+})();

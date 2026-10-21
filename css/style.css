@@ -22,6 +22,7 @@ body { margin: 0; background: var(--paper); color: var(--ink); }
 button, input { font: inherit; }
 a { color: inherit; text-decoration: none; }
 button { cursor: pointer; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid #f59e0b; outline-offset: 3px; }
 
 .announcement {
   padding: 9px 16px;
@@ -98,6 +99,8 @@ button { cursor: pointer; }
 .product-card:hover { transform: translateY(-4px); box-shadow: 0 14px 32px #1936260d; }
 .product-image-wrap { height: 200px; flex: 0 0 200px; overflow: hidden; background: #f8fafc; }
 .product-image { width: 100%; height: 100%; object-fit: contain; }
+.image-unavailable { display: grid; place-items: center; background: #f0f2f3; }
+.image-unavailable::after { color: var(--muted); content: "الصورة غير متوفرة"; font-size: .78rem; }
 .product-content { display: flex; flex: 1; flex-direction: column; padding: 17px; }
 .product-content h3 { margin: 0; font-size: 1.05rem; }
 .product-category-label { margin: 5px 0 0; color: var(--muted); font-size: .72rem; }
@@ -130,6 +133,12 @@ button { cursor: pointer; }
 .dialog-close { position: absolute; left: 18px; top: 12px; width: 36px; height: 36px; border: 0; border-radius: 50%; background: #f2f4f1; color: var(--ink); font-size: 1.5rem; }
 .order-form h2 { margin: 0; font-size: 1.4rem; }
 .selected-product { margin: 0 0 6px; color: var(--blue-dark); font-weight: 600; }
+.cart-items { display: grid; gap: 8px; max-height: 190px; overflow: auto; }
+.cart-line { display: grid; grid-template-columns: minmax(0, 1fr) 32px 26px 32px auto; align-items: center; gap: 6px; padding: 8px; border: 1px solid var(--line); border-radius: 9px; font-size: .8rem; }
+.cart-line-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cart-quantity-button, .cart-remove-button { min-height: 30px; border: 1px solid var(--line); border-radius: 6px; background: white; color: var(--ink); }
+.cart-remove-button { padding: 0 6px; color: #a3362d; }
+.cart-total { margin: 0; color: var(--blue-dark); font-weight: 700; }
 .order-form label:not(.honeypot) { margin-top: 5px; font-size: .86rem; font-weight: 600; }
 .order-form input:not([name="website"]) { width: 100%; height: 45px; padding: 0 12px; border: 1px solid #dce2dc; border-radius: 10px; outline: 0; background: #fcfdfb; }
 .order-form input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px #2563eb1a; }

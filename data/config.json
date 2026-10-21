@@ -2,8 +2,9 @@
   "store_name": "MougaMarket",
   "logo_url": "",
   "announcement_text": "التوصيل لجميع المدن المغربية والدفع عند الاستلام",
-  "store_phone": "",
+  "store_phone": "+212726604185",
   "order_endpoint": "https://mougamarket-orders.mrissmohammed20.workers.dev",
+  "facebook_pixel_id": "",
   "theme": {
     "primary_color": "#2563eb",
     "font_family": "system-ui, sans-serif"

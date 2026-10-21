@@ -1,2 +1,7 @@
 .wrangler/
 order-worker/.wrangler/
+.dev.vars
+*.7z
+node_modules/
+test-results/
+playwright-report/

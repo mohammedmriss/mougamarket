@@ -1,0 +1,13 @@
+{
+  "name": "mougamarket-static-store",
+  "private": true,
+  "scripts": {
+    "test:browser": "node tests/run-browser.mjs",
+    "test": "npm run test:worker && npm run test:browser",
+    "test:worker": "npm test --prefix order-worker",
+    "check": "npm run check --prefix order-worker && node --check js/app.js && node --check js/product.js && node --check js/admin.js && node --check js/config.js && node --check js/pixel.js && node --check scripts/generate-product-pages.mjs && node --check order-worker/test/worker.test.mjs && node --check tests/helpers.mjs && node --check tests/server.mjs && node --check tests/run-browser.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.0"
+  }
+}

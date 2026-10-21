@@ -1,0 +1,9 @@
+{
+  "name": "mougamarket-order-worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/worker.test.mjs",
+    "check": "node --check worker.js && node --check hash-password.mjs"
+  }
+}

@@ -1,0 +1,35 @@
+name: Generate product preview pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - data/products.json
+      - data/config.json
+      - CNAME
+      - scripts/generate-product-pages.mjs
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/generate-product-pages.mjs
+      - name: Commit generated pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add products sitemap.xml
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: refresh product previews [skip ci]"
+            git push
+          fi

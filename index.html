@@ -4,34 +4,35 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#2563eb">
-  <meta name="description" content="تسوق أونلاين من MougaMarket: منتجات مختارة، توصيل سريع لجميع المدن المغربية، والدفع عند الاستلام. اطلب بسهولة من منزلك.">
+  <meta name="description" content="تسوق أونلاين في المغرب مع التوصيل لجميع المدن والدفع عند الاستلام.">
   <meta name="robots" content="index,follow">
   <link rel="canonical" href="https://mougamarket.store/">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="ar_MA">
-  <meta property="og:site_name" content="MougaMarket">
-  <meta property="og:title" content="MougaMarket | تسوق أونلاين في المغرب">
+  <meta property="og:site_name" content="">
+  <meta property="og:title" content="تسوق أونلاين في المغرب">
   <meta property="og:description" content="منتجات مختارة، توصيل لجميع المدن المغربية، والدفع عند الاستلام.">
   <meta property="og:url" content="https://mougamarket.store/">
   <meta property="og:image" content="https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&amp;fit=crop&amp;w=1000&amp;q=85">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&amp;fit=crop&amp;w=1000&amp;q=85">
-  <title>MougaMarket | تسوق أونلاين في المغرب</title>
+  <title>تسوق أونلاين في المغرب</title>
   <link rel="stylesheet" href="css/style.css">
   <script src="js/app.js" defer></script>
+  <script src="js/pixel.js" defer></script>
 </head>
 <body>
   <div class="announcement" id="announcement" hidden></div>
   <div class="topbar">
     <div class="topbar-inner">
-      <a id="topbar-phone" href="tel:+212726604185">0726-604185</a>
+      <a id="topbar-phone" href="tel:"> </a>
       <p>التوصيل سريع لجميع المدن المغربية والدفع عند الاستلام</p>
     </div>
   </div>
   <header class="site-header">
     <a class="brand" href="./" aria-label="الصفحة الرئيسية">
       <span class="brand-mark" aria-hidden="true">م</span>
-      <span id="store-name">MougaMarket</span>
+      <span id="store-name"></span>
     </a>
     <nav class="main-navigation" aria-label="التنقل الرئيسي">
       <a href="./">الرئيسية</a>
@@ -48,8 +49,8 @@
     <section class="hero" aria-label="عروض المتجر">
       <div class="hero-copy">
         <p class="eyebrow">اختيارات كتستاهل</p>
-        <h1 id="hero-title">منتجات مميزة،<br>تجربة تسوق سهلة.</h1>
-        <p id="hero-description">تسوق من دارك، والتوصيل حتى لباب دارك فين ما كنتي فالمغرب.</p>
+        <h1 id="hero-title"></h1>
+        <p id="hero-description"></p>
         <a class="button button-primary hero-button" href="#products">اكتشف المنتجات</a>
       </div>
       <div class="hero-art" aria-hidden="true">
@@ -91,15 +92,15 @@
 
     <section class="bottom-callout" id="contact">
       <div><p class="eyebrow">باقي شي سؤال؟</p><h2>حنا هنا باش نعاونوك</h2></div>
-      <a class="button button-light" id="contact-link" href="tel:+212726604185">اتصل بنا: 0726-604185</a>
+      <a class="button button-light" id="contact-link" href="contact.html">اتصل بنا</a>
     </section>
   </main>
 
   <footer class="site-footer">
-    <a class="brand footer-brand" href="./"><span class="brand-mark" aria-hidden="true">م</span><span id="footer-store-name">MougaMarket</span></a>
+    <a class="brand footer-brand" href="./"><span class="brand-mark" aria-hidden="true">م</span><span id="footer-store-name"></span></a>
     <nav class="footer-links" aria-label="روابط قانونية"><a href="privacy-policy.html">سياسة الخصوصية</a><a href="terms.html">الشروط والأحكام</a><a href="contact.html">التواصل</a></nav>
     <p>© <span id="year"></span> جميع الحقوق محفوظة.</p>
-    <a id="footer-phone" href="tel:+212726604185" hidden>0726-604185</a>
+    <a id="footer-phone" href="tel:" hidden></a>
   </footer>
 
   <dialog class="order-dialog" id="order-dialog" aria-labelledby="order-title">
@@ -108,12 +109,14 @@
       <p class="eyebrow">طلب سريع</p>
       <h2 id="order-title">كمّل معلومات الطلب</h2>
       <p class="selected-product" id="selected-product"></p>
+      <div id="cart-items" class="cart-items" hidden></div>
+      <p id="cart-total" class="cart-total" hidden></p>
       <label for="customer-name">الاسم الكامل</label>
       <input id="customer-name" name="name" autocomplete="name" maxlength="100" required>
       <label for="customer-phone">رقم الهاتف</label>
-      <input id="customer-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="06 أو 07 أو +212" maxlength="13" required>
+      <input id="customer-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="06 أو 07 أو +212" maxlength="20" required>
       <label for="customer-city">العنوان الكامل</label>
-      <input id="customer-city" name="city" autocomplete="address-level2" placeholder="أدخل مدينتك وعنوانك بالتفصيل" maxlength="80" required>
+      <input id="customer-city" name="address" autocomplete="street-address" placeholder="المدينة والحي والزنقة ورقم الدار" maxlength="200" required>
       <label class="honeypot" aria-hidden="true">خلي هاد الخانة خاوية<input name="website" tabindex="-1" autocomplete="off"></label>
       <p class="form-message" id="order-message" role="status"></p>
       <button class="button button-primary submit-order" id="submit-order" type="submit">صيفط الطلب</button>

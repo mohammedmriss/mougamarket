@@ -17,10 +17,11 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/product.css">
   <script src="js/product.js" defer></script>
+  <script src="js/pixel.js" defer></script>
 </head>
 <body class="product-page">
   <div class="announcement" id="announcement" hidden></div>
-  <div class="topbar"><div class="topbar-inner"><a href="tel:+212726604185">0726-604185</a><p>التوصيل سريع لجميع المدن المغربية والدفع عند الاستلام</p></div></div>
+  <div class="topbar"><div class="topbar-inner"><a id="topbar-phone" href="tel:"></a><p>التوصيل سريع لجميع المدن المغربية والدفع عند الاستلام</p></div></div>
   <header class="site-header">
     <a class="brand" href="./" aria-label="الصفحة الرئيسية"><span class="brand-mark" aria-hidden="true">م</span><span id="store-name">MougaMarket</span></a>
     <nav class="product-header-nav" aria-label="التنقل الرئيسي"><a href="./">الرئيسية</a><a href="./#products">المنتجات</a><a href="./#about">من نحن</a><a href="contact.html">اتصل بنا</a><a href="privacy-policy.html">الخصوصية</a><a href="terms.html">الشروط</a><button class="bag-button" id="bag-button" type="button">🛒 السلة <span id="bag-count">0</span></button></nav>
@@ -70,12 +71,14 @@
       <p class="eyebrow">طلب سريع</p>
       <h2 id="checkout-title">معلومات التوصيل</h2>
       <p class="selected-product" id="checkout-summary"></p>
+      <div id="cart-items" class="cart-items" hidden></div>
+      <p id="cart-total" class="cart-total" hidden></p>
       <label for="customer-name">الاسم الكامل</label><input id="customer-name" name="name" autocomplete="name" maxlength="100" required>
-      <label for="customer-phone">رقم الهاتف</label><input id="customer-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="06 أو 07 أو +212" maxlength="13" required>
-      <label for="customer-city">العنوان الكامل</label><input id="customer-city" name="city" autocomplete="address-level2" placeholder="أدخل مدينتك وعنوانك بالتفصيل" maxlength="80" required>
+      <label for="customer-phone">رقم الهاتف</label><input id="customer-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="06 أو 07 أو +212" maxlength="20" required>
+      <label for="customer-city">العنوان الكامل</label><input id="customer-city" name="address" autocomplete="street-address" placeholder="المدينة والحي والزنقة ورقم الدار" maxlength="200" required>
       <label class="honeypot" aria-hidden="true">اترك هذه الخانة فارغة<input name="website" tabindex="-1" autocomplete="off"></label>
       <p class="form-message" id="checkout-message" role="status"></p>
-      <button class="button button-primary submit-order" id="submit-checkout" type="submit">تأكيد الطلب</button>
+      <button class="button button-primary submit-order" id="submit-checkout" type="submit">صيفط الطلب</button>
       <small class="privacy-note">نستعمل معلوماتك فقط للتواصل معك وتأكيد الطلب.</small>
     </form>
   </dialog>

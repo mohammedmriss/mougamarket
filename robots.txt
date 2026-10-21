@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /order-worker/
+
+Sitemap: https://mougamarket.store/sitemap.xml
