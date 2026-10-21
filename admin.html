@@ -10,7 +10,7 @@
   <script src="js/admin.js" defer></script>
 </head>
 <body class="admin-page">
-  <div class="admin-shell auth-locked" id="admin-shell">
+  <div class="admin-shell">
     <aside class="admin-sidebar">
       <a class="admin-brand" href="./"><span class="brand-mark">M</span><span>MougaMarket</span></a>
       <p class="sidebar-label">WORKSPACE</p>
@@ -37,29 +37,18 @@
         <button class="mobile-menu" id="mobile-menu" type="button" aria-label="Toggle menu">☰</button>
         <div><span class="topbar-kicker">STORE MANAGEMENT</span><h1 id="view-title">Dashboard</h1></div>
         <span class="connection-indicator" id="connection-indicator">Not connected</span>
-        <button class="button button-secondary logout-button" id="logout-button" type="button" hidden>Logout</button>
       </header>
 
-      <section class="admin-panel auth-panel" id="login-panel" aria-labelledby="login-title">
-        <div class="panel-heading"><div><span class="section-kicker">MOUGAMARKET ADMIN</span><h1 id="login-title">Admin sign in</h1></div></div>
-        <form id="login-form" class="auth-form">
-          <label>Email<input id="login-email" name="email" type="email" value="mougamarket@gmail.com" autocomplete="username" maxlength="254" required></label>
-          <label>Password<input id="login-password" name="password" type="password" autocomplete="current-password" minlength="10" required></label>
-          <button class="button button-primary" id="login-button" type="submit">Sign in</button>
-        </form>
-        <p class="admin-message" id="login-message" role="status"></p>
-        <p class="security-note">Sign-in is verified by the private orders service. Your signed session is saved in this browser for up to 30 days. Use this dashboard only on a trusted device.</p>
-      </section>
-
-      <section class="admin-panel connection-panel" id="connection-panel" aria-labelledby="connection-title" hidden>
+      <section class="admin-panel connection-panel" id="connection-panel" aria-labelledby="connection-title">
         <div class="panel-heading"><div><span class="section-kicker">FIRST STEP</span><h2 id="connection-title">Connect your services</h2></div></div>
         <form id="connection-form" class="connection-form">
           <label>GitHub repository <input id="repository" name="repository" placeholder="owner/repository" autocomplete="url" required></label>
           <label>Branch <input id="branch" name="branch" value="main" required></label>
           <label>GitHub fine-grained token <input id="github-token" name="token" type="password" autocomplete="off" required></label>
           <label>Worker endpoint <input id="worker-endpoint" name="endpoint" type="url" placeholder="https://orders.example.workers.dev" required></label>
+          <label>Admin API key <input id="admin-key" name="adminKey" type="password" autocomplete="off" required></label>
           <button class="button button-primary" id="connect-button" type="submit">Connect</button>
-          <p class="security-note">Use a fine-grained token limited to this repository with Contents read/write. The GitHub token is saved in this browser for automatic reconnect; Worker requests use your signed admin session.</p>
+          <p class="security-note">Tokens stay in this tab's memory only. Use a fine-grained token limited to this repository with Contents read/write.</p>
         </form>
         <p class="admin-message" id="connection-message" role="status"></p>
       </section>

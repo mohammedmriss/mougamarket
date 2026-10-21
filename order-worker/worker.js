@@ -10,7 +10,7 @@ function corsHeaders(origin) {
   return {
     "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Methods": "POST, GET, PATCH, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Headers": "Content-Type, X-Admin-Key",
     "Access-Control-Max-Age": "86400",
     "Vary": "Origin"
   };
@@ -29,104 +29,6 @@ function jsonResponse(payload, status, origin) {
 
 function validText(value, maxLength) {
   return typeof value === "string" && value.trim().length > 0 && value.trim().length <= maxLength;
-}
-
-function constantTimeEqual(left, right) {
-  const encoder = new TextEncoder();
-  const leftBytes = encoder.encode(left);
-  const rightBytes = encoder.encode(right);
-  let difference = leftBytes.length ^ rightBytes.length;
-  const length = Math.max(leftBytes.length, rightBytes.length);
-  for (let index = 0; index < length; index += 1) {
-    difference |= (leftBytes[index] || 0) ^ (rightBytes[index] || 0);
-  }
-  return difference === 0;
-}
-
-function encodeBase64Url(value) {
-  const bytes = new TextEncoder().encode(value);
-  let binary = "";
-  bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
-  return btoa(binary).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
-}
-
-function decodeBase64Url(value) {
-  const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
-  const padded = base64 + "=".repeat((4 - base64.length % 4) % 4);
-  return new TextDecoder().decode(Uint8Array.from(atob(padded), (char) => char.charCodeAt(0)));
-}
-
-async function signAdminSession(email, env) {
-  const payload = encodeBase64Url(JSON.stringify({
-    email,
-    expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000
-  }));
-  const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(env.ADMIN_SESSION_SECRET),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-  const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload));
-  const signatureBase64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
-    .replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
-  return `${payload}.${signatureBase64}`;
-}
-
-async function getAdminSession(request, env) {
-  const token = (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
-  const [payload, signature, extra] = token.split(".");
-  if (!payload || !signature || extra || !env.ADMIN_SESSION_SECRET) return null;
-  try {
-    const key = await crypto.subtle.importKey(
-      "raw",
-      new TextEncoder().encode(env.ADMIN_SESSION_SECRET),
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["verify"]
-    );
-    const signatureBytes = Uint8Array.from(atob(signature.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - signature.length % 4) % 4)), (char) => char.charCodeAt(0));
-    const valid = await crypto.subtle.verify("HMAC", key, signatureBytes, new TextEncoder().encode(payload));
-    if (!valid) return null;
-    const session = JSON.parse(decodeBase64Url(payload));
-    if (!validText(session.email, 254) || !Number.isFinite(session.expiresAt) || session.expiresAt <= Date.now()) return null;
-    return session;
-  } catch {
-    return null;
-  }
-}
-
-async function createAdminSession(request, env, origin) {
-  if (!env.ADMIN_LOGIN_EMAIL || !env.ADMIN_LOGIN_PASSWORD || !env.ADMIN_SESSION_SECRET) {
-    return jsonResponse({ error: "Admin login is not configured." }, 503, origin);
-  }
-  if (!(request.headers.get("Content-Type") || "").includes("application/json")) {
-    return jsonResponse({ error: "Expected a JSON request." }, 415, origin);
-  }
-  let credentials;
-  try {
-    credentials = await request.json();
-  } catch {
-    return jsonResponse({ error: "Invalid JSON." }, 400, origin);
-  }
-  const email = typeof credentials.email === "string" ? credentials.email.trim().toLowerCase() : "";
-  const password = typeof credentials.password === "string" ? credentials.password : "";
-  if (email.length > 254 || password.length < 10 || password.length > 256) {
-    return jsonResponse({ error: "Invalid sign-in details." }, 400, origin);
-  }
-  const expectedEmail = env.ADMIN_LOGIN_EMAIL.trim().toLowerCase();
-  if (!constantTimeEqual(email, expectedEmail) || !constantTimeEqual(password, env.ADMIN_LOGIN_PASSWORD)) {
-    return jsonResponse({ error: "Email or password is incorrect." }, 401, origin);
-  }
-  const sessionToken = await signAdminSession(email, env);
-  return jsonResponse({ sessionToken, email, expiresIn: 30 * 24 * 60 * 60 }, 200, origin);
-}
-
-async function verifyAdminSession(request, env, origin) {
-  const session = await getAdminSession(request, env);
-  if (!session) return jsonResponse({ error: "Session expired. Sign in again." }, 401, origin);
-  return jsonResponse({ email: session.email, expiresAt: session.expiresAt }, 200, origin);
 }
 
 async function readJson(response) {
@@ -239,8 +141,7 @@ async function createOrder(request, env, origin) {
 }
 
 async function handleAdminRequest(request, env, origin, pathname) {
-  const session = await getAdminSession(request, env);
-  if (!session) {
+  if (!env.ADMIN_API_KEY || request.headers.get("X-Admin-Key") !== env.ADMIN_API_KEY) {
     return jsonResponse({ error: "Unauthorized." }, 401, origin);
   }
   if (pathname === "/admin/orders" && request.method === "GET") {
@@ -282,8 +183,6 @@ export default {
 
     const pathname = new URL(request.url).pathname.replace(/\/+$/, "") || "/";
     if (pathname === "/orders" && request.method === "POST") return createOrder(request, env, origin);
-    if (pathname === "/admin/login" && request.method === "POST") return createAdminSession(request, env, origin);
-    if (pathname === "/admin/session" && request.method === "GET") return verifyAdminSession(request, env, origin);
     if (pathname.startsWith("/admin/")) return handleAdminRequest(request, env, origin, pathname);
     return jsonResponse({ error: "Not found." }, 404, origin);
   }

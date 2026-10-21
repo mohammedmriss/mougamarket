@@ -8,89 +8,22 @@ const PRODUCTS_PATH = "data/products.json";
 const CONFIG_PATH = "data/config.json";
 const API_ROOT = "https://api.github.com";
 const PAGE_SIZE = 8;
-const CONNECTION_KEY = "mougamarket-admin-connection";
-const SESSION_KEY = "mougamarket-admin-session";
 
 let githubToken = "";
 let repository = "";
 let branch = "main";
 let workerEndpoint = "";
+let adminKey = "";
 let products = [];
 let config = {};
 let orders = [];
 let fileShas = {};
 let currentPage = 1;
 let activeView = "dashboard";
-let signedInEmail = "";
-let adminSessionToken = "";
-let authenticatedWorkerEndpoint = "";
 
 function message(target, text, type = "") {
   target.textContent = text;
   target.className = `admin-message${type ? ` ${type}` : ""}`;
-}
-
-function readLocalJson(key) {
-  try {
-    return JSON.parse(localStorage.getItem(key) || "null");
-  } catch {
-    return null;
-  }
-}
-
-async function getConfiguredWorkerEndpoint() {
-  const response = await fetch("data/config.json", { cache: "no-cache" });
-  if (!response.ok) throw new Error("Could not load the admin service configuration.");
-  const settings = await response.json();
-  if (typeof settings.order_endpoint !== "string" || !settings.order_endpoint) throw new Error("The admin service endpoint is not configured.");
-  return settings.order_endpoint;
-}
-
-async function signIn(email, password) {
-  const endpoint = await getConfiguredWorkerEndpoint();
-  const response = await fetch(new URL("/admin/login", endpoint), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password })
-  });
-  const result = await response.json().catch(() => ({}));
-  if (!response.ok || !result.sessionToken) throw new Error(result.error || "Email or password is incorrect.");
-  adminSessionToken = result.sessionToken;
-  signedInEmail = result.email;
-  authenticatedWorkerEndpoint = endpoint;
-  localStorage.setItem(SESSION_KEY, JSON.stringify({
-    email: result.email,
-    token: result.sessionToken,
-    workerEndpoint: endpoint,
-    expiresAt: Date.now() + Number(result.expiresIn || 0) * 1000
-  }));
-  return result;
-}
-
-async function validateSession(session) {
-  if (!session?.token || !session.workerEndpoint || Number(session.expiresAt) <= Date.now()) return false;
-  const response = await fetch(new URL("/admin/session", session.workerEndpoint), {
-    headers: { Authorization: `Bearer ${session.token}` }
-  });
-  const result = await response.json().catch(() => ({}));
-  if (!response.ok || !result.email) return false;
-  adminSessionToken = session.token;
-  signedInEmail = result.email;
-  authenticatedWorkerEndpoint = session.workerEndpoint;
-  return true;
-}
-
-function showConnectionStage() {
-  $("#login-panel").hidden = true;
-  $("#connection-panel").hidden = false;
-  $("#admin-shell").classList.remove("auth-locked");
-}
-
-function fillConnectionForm(saved) {
-  $("#repository").value = saved.repository || "";
-  $("#branch").value = saved.branch || "main";
-  $("#github-token").value = saved.githubToken || "";
-  $("#worker-endpoint").value = saved.workerEndpoint || "";
 }
 
 function encodeBase64(text) {
@@ -156,7 +89,7 @@ async function workerRequest(path, options = {}) {
     ...options,
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${adminSessionToken}`,
+      "X-Admin-Key": adminKey,
       ...options.headers
     }
   });
@@ -396,7 +329,7 @@ function renderOrders() {
 }
 
 async function refreshOrders() {
-  if (!workerEndpoint || !adminSessionToken) return;
+  if (!workerEndpoint || !adminKey) return;
   message($("#orders-message"), "Loading orders...");
   try {
     const result = await workerRequest("/admin/orders");
@@ -469,18 +402,23 @@ async function updateOrderStatus(orderId, status, select) {
   }
 }
 
-async function connectServices(credentials, remember = true) {
-  repository = credentials.repository.trim();
-  branch = credentials.branch.trim() || "main";
-  githubToken = credentials.githubToken.trim();
-  workerEndpoint = credentials.workerEndpoint.trim();
-  const connectButton = $("#connect-button");
-  connectButton.disabled = true;
+connectionForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const repoValue = $("#repository").value.trim();
+  if (!/^[^/\s]+\/[^/\s]+$/.test(repoValue)) {
+    message($("#connection-message"), "Use the owner/repository format.", "error");
+    return;
+  }
+  repository = repoValue;
+  branch = $("#branch").value.trim();
+  githubToken = $("#github-token").value.trim();
+  workerEndpoint = $("#worker-endpoint").value.trim();
+  adminKey = $("#admin-key").value.trim();
+  $("#github-token").value = "";
+  $("#admin-key").value = "";
+  $("#connect-button").disabled = true;
   message($("#connection-message"), "Connecting to GitHub and the orders service...");
   try {
-    if (new URL(workerEndpoint).origin !== new URL(authenticatedWorkerEndpoint).origin) {
-      throw new Error("Use the Worker origin that issued this admin session.");
-    }
     const [loadedProducts, loadedConfig, loadedOrders] = await Promise.all([
       readGitHubFile(PRODUCTS_PATH),
       readGitHubFile(CONFIG_PATH),
@@ -490,90 +428,21 @@ async function connectServices(credentials, remember = true) {
     products = loadedProducts;
     config = loadedConfig;
     orders = Array.isArray(loadedOrders.orders) ? loadedOrders.orders : [];
-    if (remember) {
-      localStorage.setItem(CONNECTION_KEY, JSON.stringify({ repository, branch, githubToken, workerEndpoint }));
-    }
     workspace.hidden = false;
     $("#connection-indicator").textContent = "Connected";
     $("#connection-indicator").classList.add("connected");
     $("#connection-panel").hidden = true;
-    $("#logout-button").hidden = false;
-    $("#github-token").value = "";
     renderProducts();
     renderOrders();
     message($("#connection-message"), "Connected successfully.", "success");
     navigate("dashboard");
   } catch (error) {
     githubToken = "";
+    adminKey = "";
     message($("#connection-message"), error.message, "error");
   } finally {
-    connectButton.disabled = false;
+    $("#connect-button").disabled = false;
   }
-}
-
-connectionForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const credentials = {
-    repository: $("#repository").value.trim(),
-    branch: $("#branch").value.trim() || "main",
-    githubToken: $("#github-token").value.trim(),
-    workerEndpoint: $("#worker-endpoint").value.trim()
-  };
-  if (!/^[^/\s]+\/[^/\s]+$/.test(credentials.repository)) {
-    message($("#connection-message"), "Use the owner/repository format.", "error");
-    return;
-  }
-  connectServices(credentials);
-});
-
-$("#login-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const email = $("#login-email").value.trim().toLowerCase();
-  const password = $("#login-password").value;
-  const loginButton = $("#login-button");
-  loginButton.disabled = true;
-  message($("#login-message"), "Verifying account...");
-  try {
-    await signIn(email, password);
-    $("#login-form").reset();
-    showConnectionStage();
-    message($("#connection-message"), "Sign-in complete. Connect your services to continue.");
-    const savedConnection = readLocalJson(CONNECTION_KEY);
-    if (savedConnection) {
-      fillConnectionForm(savedConnection);
-      await connectServices(savedConnection, false);
-    }
-  } catch (error) {
-    message($("#login-message"), error.message || "Could not verify the account.", "error");
-  } finally {
-    loginButton.disabled = false;
-  }
-});
-
-$("#logout-button").addEventListener("click", () => {
-  localStorage.removeItem(SESSION_KEY);
-  localStorage.removeItem(CONNECTION_KEY);
-  localStorage.removeItem("mougamarket-admin-account");
-  githubToken = "";
-  adminSessionToken = "";
-  authenticatedWorkerEndpoint = "";
-  repository = "";
-  branch = "main";
-  workerEndpoint = "";
-  signedInEmail = "";
-  products = [];
-  config = {};
-  orders = [];
-  fileShas = {};
-  connectionForm.reset();
-  workspace.hidden = true;
-  $("#logout-button").hidden = true;
-  $("#connection-indicator").textContent = "Not connected";
-  $("#connection-indicator").classList.remove("connected");
-  $("#connection-panel").hidden = true;
-  $("#login-panel").hidden = false;
-  $("#admin-shell").classList.add("auth-locked");
-  message($("#login-message"), "You have been logged out.");
 });
 
 productForm.addEventListener("submit", async (event) => {
@@ -678,25 +547,4 @@ $("#page-next").addEventListener("click", () => { currentPage += 1; renderProduc
 $("#order-status-filter").addEventListener("change", renderOrders);
 $("#refresh-orders").addEventListener("click", refreshOrders);
 $("#mobile-menu").addEventListener("click", () => $(".admin-shell").classList.toggle("menu-open"));
-window.addEventListener("pagehide", () => { githubToken = ""; adminSessionToken = ""; });
-
-async function initializeAdminAccess() {
-  const session = readLocalJson(SESSION_KEY);
-  if (!session) return;
-  try {
-    if (!await validateSession(session)) throw new Error("Session expired.");
-  } catch {
-    localStorage.removeItem(SESSION_KEY);
-    return;
-  }
-  showConnectionStage();
-  const savedConnection = readLocalJson(CONNECTION_KEY);
-  if (!savedConnection) return;
-  fillConnectionForm(savedConnection);
-  await connectServices(savedConnection, false);
-}
-
-initializeAdminAccess();
-window.addEventListener("pageshow", (event) => {
-  if (event.persisted) initializeAdminAccess();
-});
+window.addEventListener("pagehide", () => { githubToken = ""; adminKey = ""; });
