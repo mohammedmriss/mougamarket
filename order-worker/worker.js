@@ -87,6 +87,10 @@ function ipAddress(request) {
   return request.headers.get("CF-Connecting-IP") || "unknown";
 }
 
+function normalizedEmail(email) {
+  return String(email || "").trim().toLowerCase();
+}
+
 async function login(request, env, origin) {
   if (!env.ADMIN_EMAIL || !env.ADMIN_PASSWORD_HASH || !env.SESSION_SECRET) return respond({ error: "Service unavailable." }, 503, origin);
   if (Number(request.headers.get("Content-Length") || 0) > 4096) return respond({ error: "Invalid request." }, 413, origin);
@@ -102,10 +106,10 @@ async function login(request, env, origin) {
     if (text === null) return respond({ error: "Invalid request." }, 413, origin);
     body = JSON.parse(text);
   } catch { return respond({ error: "Invalid request." }, 400, origin); }
-  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+  const email = normalizedEmail(body.email);
   const password = typeof body.password === "string" ? body.password : "";
   const passwordValid = await verifyPassword(password, env.ADMIN_PASSWORD_HASH);
-  const accepted = email === env.ADMIN_EMAIL.trim().toLowerCase() && passwordValid;
+  const accepted = email === normalizedEmail(env.ADMIN_EMAIL) && passwordValid;
   if (!accepted) {
     if (env.LOGIN_KV) {
       const previous = await env.LOGIN_KV.get(key, "json") || { count: 0 };
@@ -116,13 +120,13 @@ async function login(request, env, origin) {
     return respond({ error: "Invalid email or password." }, 401, origin);
   }
   if (env.LOGIN_KV) await env.LOGIN_KV.delete(key);
-  return respond({ token: await createSession(env.ADMIN_EMAIL.trim().toLowerCase(), env.SESSION_SECRET) }, 200, origin);
+  return respond({ token: await createSession(normalizedEmail(env.ADMIN_EMAIL), env.SESSION_SECRET) }, 200, origin);
 }
 
 async function authorized(request, env) {
   const authorization = request.headers.get("Authorization") || "";
   const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
-  return verifySession(token, env.SESSION_SECRET, env.ADMIN_EMAIL);
+  return verifySession(token, env.SESSION_SECRET, normalizedEmail(env.ADMIN_EMAIL));
 }
 
 function githubPath(path, env) {
@@ -316,8 +320,9 @@ async function adminRequest(request, env, origin, path) {
   if (path === "/admin/login" && request.method === "POST") return login(request, env, origin);
   if (!await authorized(request, env)) return respond({ error: "Unauthorized." }, 401, origin);
   if (path === "/admin/me" && request.method === "GET") {
-    const token = await createSession(env.ADMIN_EMAIL.trim().toLowerCase(), env.SESSION_SECRET);
-    return respond({ email: env.ADMIN_EMAIL, token }, 200, origin);
+    const email = normalizedEmail(env.ADMIN_EMAIL);
+    const token = await createSession(email, env.SESSION_SECRET);
+    return respond({ email, token }, 200, origin);
   }
   const content = path.match(/^\/admin\/content\/(products|config)$/);
   if (content && request.method === "GET") {

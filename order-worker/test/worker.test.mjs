@@ -92,6 +92,16 @@ test("login rejects wrong email and wrong password; accepts configured credentia
   assert.match(accepted.body.token, /^[\w-]+\.[\w-]+$/);
 });
 
+test("login and session renewal normalize the configured admin email", async () => {
+  const { env, calls } = environment({ ADMIN_EMAIL: "  Admin@Example.com  " });
+  mockFetch(calls);
+  const login = await call(env, "/admin/login", { method: "POST", body: { email: "admin@example.com", password } });
+  assert.equal(login.response.status, 200);
+  const session = await call(env, "/admin/me", { token: login.body.token });
+  assert.equal(session.response.status, 200);
+  assert.equal(session.body.email, "admin@example.com");
+});
+
 test("sessions reject tampering, forged signatures, expired tokens, and missing tokens", async () => {
   const { env, calls } = environment();
   mockFetch(calls);
