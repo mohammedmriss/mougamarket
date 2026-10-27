@@ -1,17 +1,17 @@
 {
   "store_name": "MougaMarket",
-  "logo_url": "",
+  "logo_url": "https://i.ibb.co/NdsQczNW/Puma-Puma-FB-IMG-1793129952096.webp",
   "announcement_text": "التوصيل لجميع المدن المغربية والدفع عند الاستلام",
   "store_phone": "+212726604185",
   "order_endpoint": "https://mougamarketworker.mrissmohammed20.workers.dev/",
   "facebook_pixel_id": "",
   "theme": {
-    "primary_color": "#2563eb",
+    "primary_color": "#28498f",
     "font_family": "system-ui, sans-serif"
   },
   "slider_images": [
     {
-      "image": "",
+      "image": "https://i.ibb.co/g1h3gCj/Puma-Puma-FB-IMG-1793129944075-1.webp",
       "title": "منتجات مميزة،\nتجربة تسوق سهلة.",
       "description": "تسوق من دارك، والتوصيل حتى لباب دارك فين ما كنتي فالمغرب."
     },
