@@ -292,7 +292,9 @@ async function submitCheckout(event) {
     window.trackStoreEvent?.(config.facebook_pixel_id, "Purchase", { value: total, currency: "MAD" });
     window.setTimeout(() => $("#checkout-dialog").close(), 2200);
   } catch (error) {
-    $("#checkout-message").textContent = "وقع مشكل فالإرسال. تأكد من الاتصال بالإنترنت وعاود المحاولة.";
+    $("#checkout-message").textContent = error instanceof TypeError
+      ? "تعذر الاتصال بخدمة الطلبات. تأكد من الإنترنت وعاود المحاولة."
+      : error instanceof Error ? error.message : "وقع مشكل فإرسال الطلب. عاود المحاولة.";
   } finally {
     submit.disabled = false;
     submit.textContent = "صيفط الطلب";

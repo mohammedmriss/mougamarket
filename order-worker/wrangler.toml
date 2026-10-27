@@ -1,4 +1,4 @@
-name = "mougamarket-orders"
+name = "mougamarketworker"
 main = "worker.js"
 compatibility_date = "2026-10-19"
 
@@ -6,4 +6,3 @@ compatibility_date = "2026-10-19"
 ALLOWED_ORIGINS = "https://mougamarket.store,https://www.mougamarket.store"
 GITHUB_REPO = "mohammedmriss/mougamarket"
 GITHUB_BRANCH = "main"
-# Bind optional KV namespaces named LOGIN_KV and ORDER_KV for IP limits.

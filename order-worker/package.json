@@ -1,5 +1,5 @@
 {
-  "name": "mougamarket-order-worker",
+  "name": "mougamarketworker",
   "private": true,
   "type": "module",
   "scripts": {
