@@ -89,7 +89,7 @@ function renderGallery(images) {
   }, { once: true });
 }
 
-function renderOptions(container, group, values, onSelect) {
+function renderOptions(container, group, values, onSelect, selectFirst = false) {
   group.hidden = !values.length;
   container.replaceChildren();
   if (!values.length) onSelect("");
@@ -98,7 +98,7 @@ function renderOptions(container, group, values, onSelect) {
     option.type = "button";
     option.className = "variant-option";
     option.textContent = value;
-    option.setAttribute("aria-pressed", "false");
+    option.setAttribute("aria-pressed", String(selectFirst && index === 0));
     option.addEventListener("click", () => {
       container.querySelectorAll("button").forEach((item) => item.setAttribute("aria-pressed", String(item === option)));
       onSelect(value);
@@ -106,6 +106,7 @@ function renderOptions(container, group, values, onSelect) {
     });
     container.append(option);
   });
+  if (selectFirst && values.length) onSelect(values[0]);
   updatePurchaseAvailability();
 }
 
@@ -357,7 +358,7 @@ async function initialize() {
     $("#buy-now").disabled = stock <= 0;
     renderGallery(images);
     renderOptions($("#size-options"), $("#size-group"), product.sizes || [], (value) => { selectedSize = value; });
-    renderOptions($("#color-options"), $("#color-group"), product.colors || [], (value) => { selectedColor = value; });
+    renderOptions($("#color-options"), $("#color-group"), product.colors || [], (value) => { selectedColor = value; }, true);
     renderRecommendations(products.filter((item) => item.status !== "draft"));
     document.title = `${product.name} | ${settings.store_name || "MougaMarket"}`;
     const pageUrl = `https://mougamarket.store/product.html?id=${encodeURIComponent(product.id)}`;
