@@ -64,6 +64,16 @@ function cell(value) {
   return td;
 }
 
+function formatOrderDate(value) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return new Intl.DateTimeFormat("fr-MA", {
+    dateStyle: "medium",
+    timeStyle: "short"
+  }).format(date);
+}
+
 function emptyRow(span, text) {
   const row = document.createElement("tr");
   const item = cell(text);
@@ -227,7 +237,7 @@ function renderOrders() {
   tbody.replaceChildren();
   list.forEach((order) => {
     const row = document.createElement("tr");
-    row.append(cell(String(order.id || "").slice(0, 8)), cell(order.name), cell(`${order.phone || ""} / ${order.city || ""}`), cell(order.itemsSummary), cell(`${order.total || 0} MAD`));
+    row.append(cell(String(order.id || "").slice(0, 8)), cell(formatOrderDate(order.createdAt)), cell(order.name), cell(`${order.phone || ""} / ${order.city || ""}`), cell(order.itemsSummary), cell(`${order.total || 0} MAD`));
     const statusCell = document.createElement("td");
     const badge = document.createElement("span");
     badge.className = `status-badge ${order.status || "new"}`;
@@ -244,7 +254,7 @@ function renderOrders() {
     row.append(updateCell);
     tbody.append(row);
   });
-  if (!list.length) tbody.append(emptyRow(7, "No orders yet."));
+  if (!list.length) tbody.append(emptyRow(8, "No orders yet."));
   renderDashboardOrders();
   renderAnalytics();
 }
